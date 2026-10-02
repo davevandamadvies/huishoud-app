@@ -25,7 +25,13 @@ RUN uv sync --locked --no-dev
 # ---- Runtime-stage: alleen venv en code, non-root ----
 FROM python:3.13-slim@sha256:bb2988715db2cf7ace7b53f38f3cffbef7c7046a656bee66245eb0ed386e2e81 AS runtime
 
-RUN groupadd --system --gid 10001 app \
+# Debian-beveiligingsupdates meenemen die nog niet in de basis-image zitten
+# (bijv. libpcre2-8-0, CVE-2026-103111); pip is runtime niet nodig.
+RUN apt-get update \
+    && apt-get -y upgrade --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/lib/python3.13/site-packages/pip* /usr/local/bin/pip* \
+    && groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app \
     && mkdir -p /data \
     && chown app:app /data
