@@ -98,3 +98,9 @@ jobs:
           fail-build: true
           severity-cutoff: high
           only-fixed: true
+      # TIJDELIJK (diagnose): toon de bevindingen als tabel; weer verwijderen vóór merge.
+      - name: Show scan findings (temporary)
+        if: ${{ !cancelled() }}
+        run: |
+          GRYPE="$(ls "$RUNNER_TOOL_CACHE"/grype/*/x64/grype | head -n1)"
+          "$GRYPE" huishoud-app:ci --only-fixed -o table
