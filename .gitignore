@@ -14,3 +14,11 @@ id_*
 Thumbs.db
 .vscode/
 .idea/
+
+# Python / data
+*.db
+*.sqlite*
+/data/
+.venv/
+__pycache__/
+requirements-audit.txt
