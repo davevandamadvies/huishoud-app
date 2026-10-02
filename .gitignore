@@ -1,0 +1,16 @@
+# Secrets en lokale configuratie — nooit committen
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_*
+!id_*.pub
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
