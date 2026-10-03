@@ -4,14 +4,32 @@
   {% if task and task.is_archived %}
   <p class="alert alert-info" role="status">Deze taak staat in het archief.</p>
   {% elif task %}
+  {% if pending and pending.planned_date %}
+  {% set who = responsible(pending) %}
+  <div class="card card-row">
+    <div>
+      <div class="label">Gepland</div>
+      <div class="{{ 'due-late' if pending.planned_date < today else 'due-soon' }}">{{ dutch_date(pending.planned_date)|capitalize }}{% if pending.planned_time %}, {{ pending.planned_time.strftime('%H:%M') }}{% endif %}</div>
+      <div class="item-meta">{{ who|map(attribute="display_name")|join(" en ") if who else "iedereen" }}</div>
+    </div>
+    <div class="card-actions">
+      <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Afvinken</button>
+      <button class="button button-compact button-outline" type="button" hx-get="/taken/{{ task.id }}/inplannen?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Verzetten</button>
+    </div>
+  </div>
+  {% else %}
   {% set label, tone = due_label(pending.effective_date if pending else None, today) %}
   <div class="card card-row">
     <div>
       <div class="label">Volgende keer</div>
       <div class="due-{{ tone }}">{{ label }}</div>
     </div>
-    <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Afvinken</button>
+    <div class="card-actions">
+      <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Afvinken</button>
+      <button class="button button-compact button-outline" type="button" hx-get="/taken/{{ task.id }}/inplannen?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Inplannen</button>
+    </div>
   </div>
+  {% endif %}
   {% endif %}
   <form class="card form" hx-post="{{ '/taken/%d' % task.id if task else '/taken' }}" hx-target="#task-form" hx-swap="outerHTML" novalidate>
     <div class="field">

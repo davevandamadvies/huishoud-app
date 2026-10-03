@@ -1,6 +1,6 @@
 """Schermen voor taken: lijst met zoeken/filter, aanmaken, wijzigen."""
 
-from datetime import date
+from datetime import date, time, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -8,12 +8,12 @@ from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import categories, completion, tasks
+from app import categories, completion, planning, tasks
 from app.auth import CurrentUser, current_user
-from app.dates import due_label, dutch_date, today
+from app.dates import due_label, dutch_date, plan_label, today
 from app.db import get_db
-from app.forms import Form
-from app.models import Role, Task, User, UserStatus
+from app.forms import Form, FormData
+from app.models import OccurrenceStatus, Role, Task, User, UserStatus
 from app.recurrence import IntervalUnit, RecurrenceType, describe
 from app.templating import templates
 
@@ -47,6 +47,8 @@ def _context(db: Session, user: User, **extra: object) -> dict:
         "due_label": due_label,
         "describe": describe,
         "dutch_date": dutch_date,
+        "plan_label": plan_label,
+        "responsible": planning.responsible,
         **extra,
     }
 
@@ -270,12 +272,14 @@ def complete_sheet(
     request: Request, task_id: int, user: CurrentUser, db: DB, na: str = "event"
 ) -> HTMLResponse:
     task = _get(db, task_id)
+    pending = tasks.pending_occurrence(db, task)
+    owners = [o.user_id for o in pending.owners] if pending else []
     return _sheet(
         request,
         db,
         user,
         task,
-        selected=[user.id],
+        selected=owners or [user.id],
         completed_on=today(),
         after="refresh" if na == "refresh" else "event",
     )
@@ -331,10 +335,140 @@ def complete(
             after=after,
             error=str(exc),
         )
+    return _changed(after)
+
+
+# ---- Inplannen, verzetten, annuleren (bottom sheet) ----
+
+
+def _after(value: str) -> str:
+    return "refresh" if value == "refresh" else "event"
+
+
+def _changed(after: str) -> HTMLResponse:
     headers = (
         {"HX-Refresh": "true"}
         if after == "refresh"
-        else {"HX-Trigger": "occurrence-completed"}
+        else {"HX-Trigger": "occurrences-changed"}
     )
     # Lege inhoud sluit de sheet.
     return HTMLResponse("", headers=headers)
+
+
+def _plan_sheet(
+    request: Request,
+    db: Session,
+    user: User,
+    task: Task,
+    *,
+    values: dict,
+    after: str,
+    error: str | None = None,
+) -> HTMLResponse:
+    pending = tasks.pending_occurrence(db, task)
+    context = _context(
+        db,
+        user,
+        task=task,
+        users=_active_users(db),
+        values=values,
+        after=after,
+        error=error,
+        planned=pending if pending and pending.planned_date else None,
+        min_date=today().isoformat(),
+        max_date=(today() + timedelta(days=planning.MAX_DAYS_AHEAD)).isoformat(),
+    )
+    return templates.TemplateResponse(request, "partials/plan_sheet.html", context)
+
+
+@router.get("/{task_id}/inplannen")
+def plan_sheet(
+    request: Request,
+    task_id: int,
+    user: CurrentUser,
+    db: DB,
+    na: str = "event",
+    datum: str = "",
+) -> HTMLResponse:
+    task = _get(db, task_id)
+    pending = tasks.pending_occurrence(db, task)
+    if pending is not None and pending.planned_date is not None:
+        values = {
+            "planned_date": pending.planned_date.isoformat(),
+            "planned_time": pending.planned_time.strftime("%H:%M")
+            if pending.planned_time
+            else "",
+            "owners": [o.user_id for o in pending.owners],
+        }
+    else:
+        try:
+            day = date.fromisoformat(datum)
+        except ValueError:
+            day = today() + timedelta(days=1)
+        values = {
+            "planned_date": day.isoformat(),
+            "planned_time": "",
+            "owners": [task.owner_id] if task.owner_id else [],
+        }
+    return _plan_sheet(request, db, user, task, values=values, after=_after(na))
+
+
+def _parse_plan(form: FormData) -> planning.PlanInput:
+    try:
+        planned_date = date.fromisoformat(form.get_str("planned_date"))
+    except ValueError as exc:
+        raise planning.PlanningError("Kies een datum.") from exc
+    raw_time = form.get_str("planned_time")
+    try:
+        planned_time = time.fromisoformat(raw_time) if raw_time else None
+    except ValueError as exc:
+        raise planning.PlanningError("Vul een geldige tijd in.") from exc
+    owners = tuple(int(v) for v in form.get_all("owner") if v.isdigit())
+    return planning.PlanInput(planned_date, planned_time, owners)
+
+
+@router.post("/{task_id}/inplannen")
+def plan(
+    request: Request, task_id: int, user: CurrentUser, db: DB, form: Form
+) -> Response:
+    task = _get(db, task_id)
+    after = _after(form.get_str("after"))
+    try:
+        data = _parse_plan(form)
+        pending = tasks.pending_occurrence(db, task)
+        if pending is not None and pending.status == OccurrenceStatus.PLANNED:
+            # Bij verzetten blijven de punten van deze keer staan.
+            data = planning.PlanInput(
+                data.planned_date, data.planned_time, data.owner_ids, pending.points
+            )
+            planning.reschedule(db, user, pending, data)
+        else:
+            planning.plan(db, user, task, data)
+    except planning.PlanningError as exc:
+        db.rollback()
+        values = {
+            "planned_date": form.get_str("planned_date"),
+            "planned_time": form.get_str("planned_time"),
+            "owners": [int(v) for v in form.get_all("owner") if v.isdigit()],
+        }
+        return _plan_sheet(
+            request, db, user, task, values=values, after=after, error=str(exc)
+        )
+    return _changed(after)
+
+
+@router.post("/{task_id}/planning-annuleren")
+def cancel_plan(
+    request: Request, task_id: int, user: CurrentUser, db: DB, form: Form
+) -> Response:
+    task = _get(db, task_id)
+    after = _after(form.get_str("after"))
+    pending = tasks.pending_occurrence(db, task)
+    if pending is None:
+        raise HTTPException(status_code=404)
+    try:
+        planning.cancel(db, user, pending)
+    except planning.PlanningError as exc:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return _changed(after)

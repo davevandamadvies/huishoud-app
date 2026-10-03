@@ -6,8 +6,16 @@
     <div class="item-meta">
       <span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>
       <span>{{ task.category.name }}</span>
-      <span>· {{ task.owner.display_name if task.owner else "iedereen" }}</span>
-      {% if kind != "today" %}
+      {% set who = responsible(occ) %}
+      {% if who|length > 1 %}
+      <span>· samen</span>
+      <span class="avatar-stack avatar-stack-sm">{% for u in who %}<span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>{% endfor %}</span>
+      {% else %}
+      <span>· {{ who[0].display_name if who else "iedereen" }}</span>
+      {% endif %}
+      {% if occ.planned_date and kind != "late" %}
+      <span>· {{ plan_label(occ.planned_date, occ.planned_time, today) }}</span>
+      {% elif kind != "today" %}
       {% set label, tone = due_label(occ.effective_date, today) %}
       <span class="due-{{ tone }}">· {{ label }}</span>
       {% endif %}

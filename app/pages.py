@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from app import categories, today_view
+from app import categories, planning, today_view
 from app.auth import CurrentUser, current_user
-from app.dates import due_label, today
+from app.dates import due_label, plan_label, today
 from app.db import get_db
 from app.models import User
 from app.templating import templates
@@ -31,6 +31,8 @@ def _today_context(db: Session, user: User) -> dict:
         "today": day,
         "view": today_view.build(db, day),
         "due_label": due_label,
+        "plan_label": plan_label,
+        "responsible": planning.responsible,
     }
 
 

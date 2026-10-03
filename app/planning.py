@@ -151,3 +151,11 @@ def cancel(db: Session, actor: User, occurrence: Occurrence) -> None:
         occurrence.points = None
         occurrence.owners = []
     db.commit()
+
+
+def responsible(occurrence: Occurrence) -> list[User]:
+    """Wie het zou doen: eigenaren van deze keer, anders de vaste eigenaar."""
+    if occurrence.status == OccurrenceStatus.PLANNED and occurrence.owners:
+        return [o.user for o in occurrence.owners]
+    owner = occurrence.task.owner
+    return [owner] if owner is not None else []
