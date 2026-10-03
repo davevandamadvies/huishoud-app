@@ -6,23 +6,28 @@ name: huishoud-dev
 services:
   app:
     build: .
+    # Alleen in dev: database automatisch bijwerken bij het starten.
+    # (In productie draaien migraties bewust handmatig.)
+    command: >-
+      sh -c "alembic upgrade head &&
+      exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers"
     environment:
       APP_ENV: dev
       DATABASE_URL: sqlite:////data/huishoud.db
       # Alleen Caddy kan de app bereiken (geen poort naar de host).
       FORWARDED_ALLOW_IPS: "*"
       # Vertrouw Caddy's lokale CA voor verbindingen naar Authelia.
-      SSL_CERT_FILE: /caddy-data/caddy/pki/authorities/local/root.crt
+      SSL_CERT_FILE: /ca/root.crt
     env_file:
       - dev/.secrets/app.env
     volumes:
       - app-data:/data
-      - caddy-data:/caddy-data:ro
+      - caddy-ca:/ca:ro
     depends_on:
       authelia:
         condition: service_healthy
-      caddy:
-        condition: service_started
+      caddy-ca:
+        condition: service_completed_successfully
 
   authelia:
     image: authelia/authelia:4.39@sha256:bd97cff4fcbf715b5ff1f9ae286afbe6033afce385302520b0368122d43a6f54
@@ -51,7 +56,24 @@ services:
           - huishoud.localhost
           - auth.huishoud.localhost
 
+  # Eenmalig: alleen het publieke rootcertificaat van Caddy leesbaar klaarzetten
+  # voor de app (die als uid 10001 draait en de CA-sleutel niet hoort te zien).
+  caddy-ca:
+    image: caddy:2-alpine@sha256:881bbc60f9986d5ab8e7cfd6cf7e4ef3c9c0439fef2429d035d065577882f028
+    command: >-
+      sh -c "for i in $$(seq 1 60); do
+      [ -f /caddy-data/caddy/pki/authorities/local/root.crt ] && break; sleep 1; done;
+      cp /caddy-data/caddy/pki/authorities/local/root.crt /ca/root.crt &&
+      chmod 644 /ca/root.crt"
+    volumes:
+      - caddy-data:/caddy-data:ro
+      - caddy-ca:/ca
+    depends_on:
+      caddy:
+        condition: service_started
+
 volumes:
   app-data:
   authelia-data:
   caddy-data:
+  caddy-ca:
