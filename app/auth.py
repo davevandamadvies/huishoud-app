@@ -58,6 +58,35 @@ def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> U
 CurrentUser = Annotated[User, Depends(current_user)]
 
 
+class Forbidden(Exception):
+    """Ingelogd, maar onvoldoende rechten."""
+
+
+def require_admin(
+    request: Request, user: CurrentUser, db: Annotated[Session, Depends(get_db)]
+) -> User:
+    """Alleen beheerders; de rol komt per verzoek vers uit de database."""
+    if not user.is_admin:
+        audit.record(db, "auth.forbidden", actor=user, new={"path": request.url.path})
+        db.commit()
+        raise Forbidden
+    return user
+
+
+AdminUser = Annotated[User, Depends(require_admin)]
+
+
+def forbidden_response(request: Request) -> Response:
+    if request.headers.get("hx-request") == "true":
+        return Response("Geen toegang.", status_code=403)
+    return templates.TemplateResponse(
+        request,
+        "pages/forbidden.html",
+        {"page_title": "Geen toegang", "active_nav": "more"},
+        status_code=403,
+    )
+
+
 def not_authenticated_response(request: Request) -> Response:
     target = request.url.path
     if request.url.query:

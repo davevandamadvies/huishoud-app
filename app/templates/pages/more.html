@@ -17,5 +17,19 @@
   </ul>
 </section>
 
+{% if user.is_admin %}
+<section>
+  <h2 class="section-title">Gebruikers <span class="section-note">· alleen beheerder</span></h2>
+  <ul class="list">
+    <li>
+      <a class="list-item list-link" href="/beheer/gebruikers">
+        <span class="item-title">Gebruikers beheren</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+  </ul>
+</section>
+{% endif %}
+
 <button class="button button-outline" type="button" hx-post="/auth/logout">Uitloggen</button>
 {% endblock %}
