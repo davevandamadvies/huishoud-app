@@ -39,6 +39,13 @@ def contrast(fg: str, bg: str) -> float:
         ("color-late", "color-surface"),
         ("avatar-1-fg", "avatar-1-bg"),
         ("avatar-2-fg", "avatar-2-bg"),
+        ("avatar-3-fg", "avatar-3-bg"),
+        ("avatar-4-fg", "avatar-4-bg"),
+        ("avatar-5-fg", "avatar-5-bg"),
+        ("avatar-6-fg", "avatar-6-bg"),
+        ("color-error", "color-error-soft"),
+        ("color-error", "color-surface"),
+        ("color-accent", "color-success-soft"),
     ],
 )
 def test_text_contrast(fg: str, bg: str) -> None:

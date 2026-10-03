@@ -49,6 +49,19 @@
   --avatar-1-fg: #8a3a22;
   --avatar-2-bg: #dcefea;
   --avatar-2-fg: #1f5f52;
+  --avatar-3-bg: #e3e8fa;
+  --avatar-3-fg: #33478f;
+  --avatar-4-bg: #f6ecd3;
+  --avatar-4-fg: #6e5214;
+  --avatar-5-bg: #efe3f6;
+  --avatar-5-fg: #66307f;
+  --avatar-6-bg: #e6ece4;
+  --avatar-6-fg: #3c5a33;
+
+  /* Meldingen */
+  --color-error: #a8321f;
+  --color-error-soft: #fbe9e5;
+  --color-success-soft: #eef6f1;
 
   /* Vorm en ruimte */
   --radius-list: 20px;
@@ -285,6 +298,11 @@ textarea {
   margin: 0;
 }
 
+code {
+  font-size: 0.85em;
+  word-break: break-all;
+}
+
 .code-block {
   display: inline-block;
   padding: var(--space-2) var(--space-3);
@@ -294,6 +312,109 @@ textarea {
   border: 1px solid var(--color-border);
   border-radius: 10px;
   user-select: all;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.section-note {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.list-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.list-link:hover {
+  background: var(--color-bg);
+}
+
+li + li > .list-link {
+  border-top: 1px solid var(--color-divider);
+}
+
+.chevron {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch);
+  margin: -12px 0 0 -6px;
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- Formulieren ---- */
+
+.form {
+  gap: var(--space-4);
+}
+
+.form .button {
+  align-self: stretch;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.label {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  font-size: var(--text-base);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-input-border);
+  border-radius: var(--radius-input);
+}
+
+.input:focus-visible {
+  outline-offset: 0;
+  border-color: var(--color-accent);
+}
+
+.alert {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  border-radius: var(--radius-input);
+}
+
+.alert-error {
+  color: var(--color-error);
+  background: var(--color-error-soft);
+}
+
+.alert-success {
+  color: var(--color-accent);
+  background: var(--color-success-soft);
 }
 
 /* ---- Avatars ---- */
@@ -318,6 +439,26 @@ textarea {
 .avatar-2 {
   background: var(--avatar-2-bg);
   color: var(--avatar-2-fg);
+}
+
+.avatar-3 {
+  background: var(--avatar-3-bg);
+  color: var(--avatar-3-fg);
+}
+
+.avatar-4 {
+  background: var(--avatar-4-bg);
+  color: var(--avatar-4-fg);
+}
+
+.avatar-5 {
+  background: var(--avatar-5-bg);
+  color: var(--avatar-5-fg);
+}
+
+.avatar-6 {
+  background: var(--avatar-6-bg);
+  color: var(--avatar-6-fg);
 }
 
 .avatar-stack {
@@ -374,6 +515,18 @@ textarea {
   font-weight: 600;
   color: var(--color-accent);
   background: transparent;
+}
+
+.button-danger {
+  min-height: 52px;
+  font-size: var(--text-base);
+  color: var(--color-error);
+  background: transparent;
+  border: 1.5px solid var(--color-error);
+}
+
+.button-danger:hover {
+  background: var(--color-error-soft);
 }
 
 /* Filterpil: oogt 36px hoog, aanraakvlak is 44px */

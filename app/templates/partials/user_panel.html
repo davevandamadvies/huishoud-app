@@ -1,0 +1,42 @@
+<div id="user-panel" class="stack">
+  {% include "partials/messages.html" %}
+  <ul class="list">
+    <li class="list-item">
+      <span class="avatar avatar-{{ target.avatar_color }}" aria-hidden="true">{{ target.initial }}</span>
+      <div>
+        <div class="item-title">{{ target.display_name }}</div>
+        <div class="item-meta">{{ role_labels[target.role] }} · {{ "actief" if target.is_active else "gedeactiveerd" }}</div>
+      </div>
+    </li>
+  </ul>
+
+  <form class="card form" hx-post="/beheer/gebruikers/{{ target.id }}/naam" hx-target="#user-panel" hx-swap="outerHTML">
+    <div class="field">
+      <label class="label" for="display_name">Naam in de app</label>
+      <input class="input" id="display_name" name="display_name" required maxlength="50" value="{{ target.display_name }}">
+    </div>
+    <button class="button button-outline" type="submit">Naam opslaan</button>
+  </form>
+
+  <form class="card form" hx-post="/beheer/gebruikers/{{ target.id }}/rol" hx-target="#user-panel" hx-swap="outerHTML">
+    <div class="field">
+      <label class="label" for="role">Rol</label>
+      <select class="input" id="role" name="role">
+        {% for role, label in role_labels.items() %}
+        <option value="{{ role.value }}"{% if target.role == role %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="button button-outline" type="submit">Rol opslaan</button>
+  </form>
+
+  <div class="card">
+    <p class="muted">Account-ID: <code>{{ target.oidc_sub }}</code></p>
+    {% if target.is_active %}
+    <p>Deactiveren beëindigt direct alle sessies. Taken en punten blijven bewaard.</p>
+    <button class="button button-danger" type="button" hx-post="/beheer/gebruikers/{{ target.id }}/deactiveren" hx-target="#user-panel" hx-swap="outerHTML" hx-confirm="{{ target.display_name }} deactiveren?">Deactiveren</button>
+    {% else %}
+    <button class="button button-outline" type="button" hx-post="/beheer/gebruikers/{{ target.id }}/activeren" hx-target="#user-panel" hx-swap="outerHTML">Weer activeren</button>
+    {% endif %}
+  </div>
+</div>

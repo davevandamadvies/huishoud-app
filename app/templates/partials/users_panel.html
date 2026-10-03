@@ -1,0 +1,43 @@
+<div id="users-panel" class="stack">
+  {% include "partials/messages.html" %}
+  <section>
+    <ul class="list">
+      {% for u in users %}
+      <li>
+        <a class="list-item list-link" href="/beheer/gebruikers/{{ u.id }}">
+          <span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>
+          <div>
+            <div class="item-title">{{ u.display_name }}{% if u.id == user.id %} <span class="muted">(jij)</span>{% endif %}</div>
+            <div class="item-meta">{{ role_labels[u.role] }}{% if not u.is_active %} · gedeactiveerd{% endif %}</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="section-title" id="grant-title">Toegang geven</h2>
+    <form class="card form" hx-post="/beheer/gebruikers" hx-target="#users-panel" hx-swap="outerHTML" aria-labelledby="grant-title">
+      <p class="muted">Het account-ID staat op de pagina "Geen toegang" die iemand ziet na de eerste keer inloggen.</p>
+      <div class="field">
+        <label class="label" for="oidc_sub">Account-ID</label>
+        <input class="input" id="oidc_sub" name="oidc_sub" required maxlength="255" autocomplete="off" spellcheck="false" value="{{ form.oidc_sub or '' }}">
+      </div>
+      <div class="field">
+        <label class="label" for="display_name">Naam in de app</label>
+        <input class="input" id="display_name" name="display_name" required maxlength="50" value="{{ form.display_name or '' }}">
+      </div>
+      <div class="field">
+        <label class="label" for="role">Rol</label>
+        <select class="input" id="role" name="role">
+          {% for role, label in role_labels.items() %}
+          <option value="{{ role.value }}"{% if (form.role or 'user') == role.value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="button" type="submit">Toegang geven</button>
+    </form>
+  </section>
+</div>

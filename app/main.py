@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-from app import auth, pages
+from app import admin, auth, pages
 from app.bootstrap import run_bootstrap
 from app.db import new_session
 from app.oidc import OIDCNotConfigured
@@ -48,10 +48,15 @@ def create_app() -> FastAPI:
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(auth.router)
     app.include_router(pages.router)
+    app.include_router(admin.router)
 
     @app.exception_handler(auth.NotAuthenticated)
     def _not_authenticated(request: Request, _exc: Exception) -> Response:
         return auth.not_authenticated_response(request)
+
+    @app.exception_handler(auth.Forbidden)
+    def _forbidden(request: Request, _exc: Exception) -> Response:
+        return auth.forbidden_response(request)
 
     @app.exception_handler(OIDCNotConfigured)
     def _oidc_not_configured(request: Request, exc: Exception) -> Response:
