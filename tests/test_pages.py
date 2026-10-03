@@ -1,6 +1,7 @@
 import hashlib
 import re
 from datetime import date
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -46,11 +47,29 @@ def test_assets_are_local_and_served() -> None:
     assert not re.search(r'(?:href|src)="(?:https?:)?//', html)
 
 
+class _InlineCodeFinder(HTMLParser):
+    """Verzamelt inline scripts, style-elementen en style-attributen."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.found: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        names = {name for name, _ in attrs}
+        if tag == "script" and "src" not in names:
+            self.found.append("inline <script>")
+        if tag == "style":
+            self.found.append("<style>")
+        if "style" in names:
+            self.found.append(f"style-attribuut op <{tag}>")
+        if any(name.startswith("on") or name.startswith("hx-on") for name in names):
+            self.found.append(f"event-handler op <{tag}>")
+
+
 def test_no_inline_scripts_or_styles() -> None:
-    html = client.get("/").text
-    assert not re.search(r"<script(?![^>]*\bsrc=)[^>]*>", html)
-    assert "<style" not in html
-    assert " style=" not in html
+    finder = _InlineCodeFinder()
+    finder.feed(client.get("/").text)
+    assert finder.found == []
 
 
 def test_vendored_checksums_match_readme() -> None:
