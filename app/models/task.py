@@ -119,6 +119,9 @@ class Occurrence(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     task: Mapped[Task] = relationship()
+    performers: Mapped[list["Performer"]] = relationship(
+        cascade="all, delete-orphan", order_by="Performer.user_id"
+    )
 
     @property
     def is_pending(self) -> bool:
@@ -128,3 +131,20 @@ class Occurrence(Base):
     def effective_date(self) -> date | None:
         """Plandatum gaat voor de berekende vervaldatum."""
         return self.planned_date or self.due_date
+
+
+class Performer(Base):
+    """Wie een uitvoering daadwerkelijk heeft gedaan (0..n per uitvoering)."""
+
+    __tablename__ = "occurrence_performers"
+
+    occurrence_id: Mapped[int] = mapped_column(
+        ForeignKey("occurrences.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), primary_key=True, index=True
+    )
+    # Toegekende punten (fase 3); leeg = geen punten
+    points: Mapped[int | None] = mapped_column(Integer)
+
+    user: Mapped[User] = relationship()

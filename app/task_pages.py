@@ -1,5 +1,6 @@
 """Schermen voor taken: lijst met zoeken/filter, aanmaken, wijzigen."""
 
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -7,9 +8,9 @@ from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import categories, tasks
+from app import categories, completion, tasks
 from app.auth import CurrentUser, current_user
-from app.dates import due_label, today
+from app.dates import due_label, dutch_date, today
 from app.db import get_db
 from app.forms import Form
 from app.models import Role, Task, User, UserStatus
@@ -45,6 +46,7 @@ def _context(db: Session, user: User, **extra: object) -> dict:
         "today": today(),
         "due_label": due_label,
         "describe": describe,
+        "dutch_date": dutch_date,
         **extra,
     }
 
@@ -117,6 +119,8 @@ def _form_context(
         unit_labels=UNIT_LABELS,
         page_title=task.name if task else "Nieuwe taak",
         has_history=tasks.has_history(db, task) if task else False,
+        log=completion.history(db, task) if task else [],
+        pending=tasks.pending_occurrence(db, task) if task else None,
     )
 
 
@@ -218,3 +222,119 @@ def delete(request: Request, task_id: int, user: CurrentUser, db: DB) -> Respons
         )
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     return Response(status_code=204, headers={"HX-Redirect": "/taken"})
+
+
+# ---- Afvinken (bottom sheet) ----
+
+
+def _active_users(db: Session) -> list[User]:
+    return list(
+        db.scalars(
+            select(User)
+            .where(User.status == UserStatus.ACTIVE)
+            .order_by(User.display_name)
+        )
+    )
+
+
+def _sheet(
+    request: Request,
+    db: Session,
+    user: User,
+    task: Task,
+    *,
+    selected: list[int],
+    completed_on: date,
+    note: str = "",
+    after: str = "event",
+    error: str | None = None,
+) -> HTMLResponse:
+    context = _context(
+        db,
+        user,
+        task=task,
+        users=_active_users(db),
+        selected=selected,
+        completed_on=completed_on,
+        note=note,
+        after=after,
+        error=error,
+        preview=completion.preview_next(db, task, completed_on),
+        max_days_back=completion.MAX_DAYS_BACK,
+    )
+    return templates.TemplateResponse(request, "partials/complete_sheet.html", context)
+
+
+@router.get("/{task_id}/afronden")
+def complete_sheet(
+    request: Request, task_id: int, user: CurrentUser, db: DB, na: str = "event"
+) -> HTMLResponse:
+    task = _get(db, task_id)
+    return _sheet(
+        request,
+        db,
+        user,
+        task,
+        selected=[user.id],
+        completed_on=today(),
+        after="refresh" if na == "refresh" else "event",
+    )
+
+
+@router.get("/{task_id}/afronden/voorbeeld")
+def complete_preview(
+    request: Request, task_id: int, user: CurrentUser, db: DB, completed_on: str = ""
+) -> HTMLResponse:
+    task = _get(db, task_id)
+    try:
+        day = date.fromisoformat(completed_on)
+    except ValueError:
+        day = today()
+    context = {
+        "preview": completion.preview_next(db, task, day),
+        "dutch_date": dutch_date,
+    }
+    return templates.TemplateResponse(request, "partials/next_preview.html", context)
+
+
+@router.post("/{task_id}/afronden")
+def complete(
+    request: Request, task_id: int, user: CurrentUser, db: DB, form: Form
+) -> Response:
+    task = _get(db, task_id)
+    performer_ids = [int(v) for v in form.get_all("performer") if v.isdigit()]
+    note = form.get_str("note")
+    after = "refresh" if form.get_str("after") == "refresh" else "event"
+    try:
+        completed_on = date.fromisoformat(form.get_str("completed_on"))
+    except ValueError:
+        completed_on = today()
+    try:
+        completion.complete(
+            db,
+            user,
+            task,
+            performer_ids=performer_ids,
+            completed_on=completed_on,
+            note=note,
+        )
+    except completion.CompletionError as exc:
+        db.rollback()
+        return _sheet(
+            request,
+            db,
+            user,
+            task,
+            selected=performer_ids,
+            completed_on=completed_on,
+            note=note,
+            after=after,
+            error=str(exc),
+        )
+    headers = (
+        {"HX-Refresh": "true"}
+        if after == "refresh"
+        else {"HX-Trigger": "occurrence-completed"}
+    )
+    # Lege inhoud sluit de sheet.
+    return HTMLResponse("", headers=headers)

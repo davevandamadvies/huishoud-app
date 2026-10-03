@@ -890,6 +890,143 @@ a.chip {
   margin-left: var(--space-2);
 }
 
+/* ---- Bottom sheet ---- */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgb(26 29 26 / 45%);
+}
+
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: var(--content-max);
+  max-height: 92vh;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: 28px 28px 0 0;
+}
+
+body.sheet-open {
+  overflow: hidden;
+}
+
+.sheet-handle {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  background: var(--color-input-border);
+  border-radius: var(--radius-pill);
+}
+
+.sheet-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.sheet-close svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sheet-title {
+  margin-top: var(--space-1);
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.sheet-title:focus {
+  outline: none;
+}
+
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.sheet-preview {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.sheet-preview strong {
+  color: var(--color-text);
+}
+
+.who-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.who {
+  position: relative;
+  display: flex;
+  flex: 1 1 140px;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 14px;
+  font-size: var(--text-base);
+  font-weight: 600;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-input-border);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.who input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.who:has(input:checked) {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.who:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.card-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.button-compact {
+  min-height: var(--touch);
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+}
+
 /* ---- Navigatie onderaan ---- */
 
 .bottom-nav {
