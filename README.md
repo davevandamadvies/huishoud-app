@@ -46,6 +46,15 @@ Startvulling (45 taken) laden, terwijl de omgeving draait:
 docker compose -f compose.dev.yml exec app python -m app.seed
 ```
 
+Meldingen en de app op je beginscherm (PWA) werken alleen als de browser het
+certificaat vertrouwt; met alleen een "toch doorgaan"-uitzondering registreert
+Chrome geen service worker. Haal het lokale rootcertificaat van Caddy op en
+importeer het in je systeem of browser (alleen voor ontwikkeling):
+
+```sh
+docker compose -f compose.dev.yml cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
+```
+
 Werkt `huishoud.localhost` niet in je browser (bijv. Safari), voeg dan deze regel
 toe aan `/etc/hosts`: `127.0.0.1 huishoud.localhost auth.huishoud.localhost`.
 

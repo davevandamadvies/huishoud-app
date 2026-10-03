@@ -6,7 +6,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-from app import admin, auth, category_pages, pages, planning_pages, task_pages
+from app import (
+    admin,
+    auth,
+    category_pages,
+    pages,
+    planning_pages,
+    pwa,
+    task_pages,
+)
 from app.bootstrap import run_bootstrap
 from app.db import new_session
 from app.oidc import OIDCNotConfigured
@@ -48,6 +56,7 @@ def create_app() -> FastAPI:
         and (settings.base_url or "").startswith("https://"),
     )
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.include_router(pwa.router)
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(admin.router)
