@@ -1,0 +1,44 @@
+<div class="sheet-backdrop" data-close-sheet></div>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet-handle" aria-hidden="true"></div>
+  <button class="sheet-close" type="button" data-close-sheet aria-label="Sluiten">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <div>
+    <p class="item-meta"><span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>{{ task.category.name }} · {{ describe(task.rule)|lower }}</p>
+    <h2 class="sheet-title" id="sheet-title" tabindex="-1">{{ task.name }}</h2>
+  </div>
+
+  <form class="sheet-form" hx-post="/taken/{{ task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML">
+    <input type="hidden" name="after" value="{{ after }}">
+    {% if error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+
+    <fieldset class="field">
+      <legend class="label">Wie heeft het gedaan?</legend>
+      <div class="who-list">
+        {% for u in users %}
+        <label class="who">
+          <input type="checkbox" name="performer" value="{{ u.id }}"{% if u.id in selected %} checked{% endif %}{% if loop.first %} data-autofocus{% endif %}>
+          <span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>
+          <span>{{ u.display_name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="field">
+      <label class="label" for="completed_on">Wanneer</label>
+      <input class="input" id="completed_on" name="completed_on" type="date" value="{{ completed_on.isoformat() }}" max="{{ today.isoformat() }}"
+             hx-get="/taken/{{ task.id }}/afronden/voorbeeld" hx-trigger="change" hx-target="#next-preview" hx-swap="outerHTML" hx-include="this">
+    </div>
+
+    <div class="field">
+      <label class="label" for="note">Notitie</label>
+      <input class="input" id="note" name="note" maxlength="500" placeholder="Optioneel" value="{{ note }}">
+    </div>
+
+    {% include "partials/next_preview.html" %}
+
+    <button class="button" type="submit">Gedaan</button>
+  </form>
+</section>

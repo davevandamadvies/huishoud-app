@@ -10,6 +10,7 @@
   <link rel="icon" href="{{ static_url('icon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
   <script src="{{ static_url('vendor/htmx/htmx.min.js') }}" defer></script>
+  <script src="{{ static_url('js/app.js') }}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#inhoud">Naar de inhoud</a>
@@ -17,5 +18,6 @@
     {% block content %}{% endblock %}
   </main>
   {% if not hide_nav %}{% include "partials/bottom_nav.html" %}{% endif %}
+  <div id="sheet"></div>
 </body>
 </html>
