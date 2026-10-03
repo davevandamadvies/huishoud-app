@@ -71,6 +71,19 @@ Wie bij Authelia kan inloggen maar niet als gebruiker in de app bekend is, krijg
 Geheimen krijgen nooit een standaardwaarde en horen in `.env` (niet in git).
 Zie `.env.example`.
 
+## Startvulling
+
+De beginlijst met 45 taken (`app/seed_data.py`) laad je met:
+
+```sh
+uv run python -m app.seed                                   # lokaal
+docker compose run --rm <service> python -m app.seed        # op de NAS
+```
+
+Het commando is veilig om opnieuw te draaien: taken die al bestaan (zelfde naam)
+worden overgeslagen. De taken krijgen nog geen datum; ze verschijnen onder
+Taken als "nog geen datum" tot je ze afvinkt of een "volgende keer" invult.
+
 ## Migraties in productie
 
 Migraties draaien niet automatisch. Op de NAS:
