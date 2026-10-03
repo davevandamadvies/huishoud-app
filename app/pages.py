@@ -6,7 +6,15 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from app import categories, planning, scores, settings_store, today_view
+from app import (
+    categories,
+    planning,
+    push,
+    reminders,
+    scores,
+    settings_store,
+    today_view,
+)
 from app.auth import CurrentUser, current_user
 from app.dates import due_label, plan_label, today, when_label
 from app.db import get_db
@@ -119,5 +127,7 @@ def more_page(request: Request, user: CurrentUser, db: DB) -> HTMLResponse:
             "page_title": "Instellingen",
             "active_nav": "more",
             "category_count": len(categories.list_categories(db)),
+            "reminders": reminders.summary(db, user),
+            "device_count": len(push.subscriptions_for(db, user)),
         },
     )

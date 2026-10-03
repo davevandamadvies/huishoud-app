@@ -18,12 +18,48 @@
 </section>
 
 <section>
-  <h2 class="section-title">Voor mij</h2>
+  <h2 class="section-title">Mijn reminders</h2>
   <ul class="list">
     <li>
+      <a class="list-item list-link" href="/reminders/update">
+        <span class="item-title">Update</span>
+        <span class="item-end">{{ reminders.update }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+    <li>
+      <a class="list-item list-link" href="/reminders/taken">
+        <span class="item-title">Van tevoren</span>
+        <span class="item-end">{{ reminders.before }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+    <li>
+      <a class="list-item list-link" href="/reminders/taken">
+        <span class="item-title">Bij te laat</span>
+        <span class="item-end">{{ reminders.late }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+    <li>
+      <a class="list-item list-link" href="/reminders/stille-uren">
+        <span class="item-title">Stille uren</span>
+        <span class="item-end">{{ reminders.quiet }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+    <li>
+      <a class="list-item list-link" href="/reminders/categorieen">
+        <span class="item-title">Categorieën</span>
+        <span class="item-end">{{ reminders.categories }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+    <li>
       <a class="list-item list-link" href="/meldingen">
-        <span class="item-title">Meldingen</span>
-        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+        <span class="item-title">Toestellen</span>
+        <span class="item-end">{{ device_count or "Geen" }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
       </a>
     </li>
   </ul>

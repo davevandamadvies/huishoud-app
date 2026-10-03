@@ -138,6 +138,7 @@ def _values_from_task(db: Session, task: Task) -> dict:
         "owner_id": str(task.owner_id or ""),
         "default_points": str(task.default_points or ""),
         "notes": task.notes or "",
+        "first_reminder_days": str(task.first_reminder_days or ""),
         "next_date": pending.due_date.isoformat()
         if pending and pending.due_date
         else "",

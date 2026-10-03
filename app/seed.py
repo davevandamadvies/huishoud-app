@@ -46,6 +46,7 @@ def seed_tasks(db: Session) -> tuple[int, int]:
                 interval_unit=IntervalUnit(item.unit),
                 default_points=item.points,
                 notes=item.notes,
+                first_reminder_days=item.first_reminder_days,
             )
         )
         added.append(item.name)
