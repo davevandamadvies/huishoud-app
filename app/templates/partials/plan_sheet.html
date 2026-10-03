@@ -38,6 +38,8 @@
       </div>
     </fieldset>
 
+    {% if request.state.competition %}{% with points=values.points %}{% include "partials/points_stepper.html" %}{% endwith %}{% endif %}
+
     <button class="button" type="submit">{{ "Opslaan" if planned else "Inplannen" }}</button>
   </form>
 

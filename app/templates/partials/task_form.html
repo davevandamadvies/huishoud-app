@@ -125,6 +125,18 @@
         <div class="item-body">
           <div class="item-title">{{ occ.performers|map(attribute="user.display_name")|join(" en ") }}</div>
           <div class="item-meta">{{ dutch_date(occ.completed_on) }}{% if occ.note %} · {{ occ.note }}{% endif %}</div>
+          {% if request.state.competition %}
+          <details class="points-edit">
+            <summary>{{ ("%d punten" % occ.points) if occ.points else "Geen punten" }}{% if occ.points and occ.performers|length > 1 %} (ieder {{ occ.performers[0].points }}){% endif %} · aanpassen</summary>
+            <form class="inline-fields" hx-post="/taken/{{ task.id }}/logboek/{{ occ.id }}/punten">
+              <label class="visually-hidden" for="points-{{ occ.id }}">Punten</label>
+              <input class="input input-number" id="points-{{ occ.id }}" name="points" type="number" min="1" max="100" inputmode="numeric" value="{{ occ.points or '' }}" placeholder="–">
+              <label class="visually-hidden" for="reason-{{ occ.id }}">Reden</label>
+              <input class="input" id="reason-{{ occ.id }}" name="reason" maxlength="200" placeholder="Reden (optioneel)">
+              <button class="button button-compact" type="submit">Opslaan</button>
+            </form>
+          </details>
+          {% endif %}
         </div>
       </li>
       {% endfor %}

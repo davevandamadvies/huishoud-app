@@ -6,7 +6,8 @@ from datetime import date, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app import audit, tasks
+from app import audit, settings_store, tasks
+from app import points as app_points
 from app.dates import today
 from app.db import utcnow
 from app.models import Occurrence, OccurrenceStatus, Performer, Task, User
@@ -40,6 +41,7 @@ def complete(
     performer_ids: list[int],
     completed_on: date | None = None,
     note: str | None = None,
+    points: int | None = None,
 ) -> CompletionResult:
     if task.is_archived:
         raise CompletionError("Deze taak staat in het archief.")
@@ -51,6 +53,14 @@ def complete(
     note = (note or "").strip() or None
     if note and len(note) > 500:
         raise CompletionError("De notitie mag maximaal 500 tekens zijn.")
+
+    # Zonder competitie worden er geen punten geregistreerd.
+    if not settings_store.competition_enabled(db):
+        points = None
+    try:
+        app_points.validate(points)
+    except app_points.PointsError as exc:
+        raise CompletionError(str(exc)) from exc
 
     unique_ids = list(dict.fromkeys(performer_ids))
     if not unique_ids:
@@ -71,6 +81,7 @@ def complete(
     occurrence.completed_at = utcnow()
     occurrence.note = note
     occurrence.performers = [Performer(user_id=u.id) for u in performers]
+    app_points.distribute(occurrence, points)
     db.flush()
 
     next_date = next_due(task.rule, completed_on, previous_due)
@@ -90,6 +101,7 @@ def complete(
             "task_id": task.id,
             "completed_on": completed_on.isoformat(),
             "performers": [u.id for u in performers],
+            "points": points,
             "previous_due": previous_due.isoformat() if previous_due else None,
             "next_due": next_date.isoformat() if next_date else None,
         },
@@ -112,3 +124,11 @@ def history(db: Session, task: Task, limit: int = 10) -> list[Occurrence]:
             .limit(limit)
         )
     )
+
+
+def default_points(db: Session, task: Task) -> int | None:
+    """Voorstel in het afvinkpaneel: punten van de geplande keer, anders de taak."""
+    pending = tasks.pending_occurrence(db, task)
+    if pending is not None and pending.points is not None:
+        return pending.points
+    return task.default_points

@@ -1341,3 +1341,64 @@ li + li > .list-button {
 .switch[aria-checked="true"] .switch-knob {
   transform: translateX(20px);
 }
+
+/* ---- Punten ---- */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.step {
+  width: var(--touch);
+  height: var(--touch);
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-input-border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.stepper-value {
+  width: 72px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.stepper-value::-webkit-inner-spin-button,
+.stepper-value::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.stepper-note {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.points-plus {
+  color: var(--color-accent);
+}
+
+.points-edit {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.points-edit summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--color-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.points-edit form {
+  margin-top: var(--space-2);
+}

@@ -79,7 +79,14 @@ def _apply(occurrence: Occurrence, data: PlanInput, owners: list[User]) -> None:
     occurrence.owners = [OccurrenceOwner(user_id=u.id) for u in owners]
 
 
-def plan(db: Session, actor: User, task: Task, data: PlanInput) -> Occurrence:
+def plan(
+    db: Session,
+    actor: User,
+    task: Task,
+    data: PlanInput,
+    *,
+    use_task_points: bool = True,
+) -> Occurrence:
     if task.is_archived:
         raise PlanningError("Deze taak staat in het archief.")
     owners = _validate(db, data)
@@ -89,7 +96,7 @@ def plan(db: Session, actor: User, task: Task, data: PlanInput) -> Occurrence:
     if occurrence is None:
         occurrence = Occurrence(task_id=task.id)
         db.add(occurrence)
-    if data.points is None:
+    if data.points is None and use_task_points:
         data = PlanInput(
             data.planned_date, data.planned_time, data.owner_ids, task.default_points
         )

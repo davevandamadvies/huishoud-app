@@ -49,6 +49,9 @@
             {% endif %}
           </div>
         </a>
+        {% if request.state.competition and occ.performers and occ.performers[0].points %}
+        <span class="item-end points-plus">+{{ occ.performers[0].points }}{{ " p.p." if occ.performers|length > 1 else " p" }}</span>
+        {% endif %}
       </li>
       {% endfor %}
     </ul>
