@@ -120,6 +120,11 @@ De app stuurt meldingen alleen naar bekende pushdiensten (o.a.
 uitgaand HTTPS-verkeer nodig. Meldingen werken alleen via HTTPS met een
 certificaat dat de telefoon vertrouwt.
 
+De herinneringen worden binnen de app gepland (elke minuut, tijdzone
+Europe/Amsterdam); er is geen cronjob of extra container nodig. De container
+moet dus blijven draaien. Na een herstart haalt de app een gemist tijdstip
+hooguit 15 minuten later in.
+
 ## Controle na het uitrollen
 
 - `https://huishoud.<domein>/healthz` geeft `{"status":"ok"}`.

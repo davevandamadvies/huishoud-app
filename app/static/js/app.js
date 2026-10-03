@@ -121,19 +121,32 @@
     });
   }
 
+  // Sommige browsers blijven hangen als de pushdienst onbereikbaar is.
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_resolve, reject) {
+        setTimeout(function () { reject(new Error("timeout")); }, ms);
+      }),
+    ]);
+  }
+
   function pushSubscribe(root) {
     var parts = pushParts(root);
+    parts.on.disabled = true;
+    parts.status.textContent = "Bezig met aanzetten…";
     Notification.requestPermission().then(function (permission) {
       if (permission !== "granted") {
+        parts.on.disabled = false;
         showPushState(root);
         return null;
       }
-      return navigator.serviceWorker.ready.then(function (registration) {
+      return withTimeout(navigator.serviceWorker.ready.then(function (registration) {
         return registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: base64UrlToBytes(root.dataset.pushKey),
         });
-      });
+      }), 20000);
     }).then(function (subscription) {
       if (!subscription) return;
       var data = subscription.toJSON();
@@ -143,7 +156,8 @@
         values: { endpoint: data.endpoint, p256dh: data.keys.p256dh, auth: data.keys.auth },
       });
     }).catch(function () {
-      parts.status.textContent = "Aanzetten lukte niet. Probeer het later opnieuw.";
+      parts.on.disabled = false;
+      parts.status.textContent = "Aanzetten lukte niet. Controleer je verbinding en probeer het opnieuw.";
     });
   }
 

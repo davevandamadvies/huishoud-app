@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base, UTCDateTime, utcnow
@@ -47,3 +47,20 @@ class ReminderMutedCategory(Base):
     category_id: Mapped[int] = mapped_column(
         ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True
     )
+
+
+class ReminderLog(Base):
+    """Verstuurde herinneringen; de unieke sleutel voorkomt dubbel versturen."""
+
+    __tablename__ = "reminder_log"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "subject", "day", "slot"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String(20))  # update, task
+    subject: Mapped[str] = mapped_column(String(40))  # "update" of uitvoering-id
+    day: Mapped[date] = mapped_column(Date)  # de dag van het tijdstip
+    slot: Mapped[str] = mapped_column(String(5))  # het ingestelde tijdstip, HH:MM
+    sent_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

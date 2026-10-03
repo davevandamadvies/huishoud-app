@@ -15,6 +15,7 @@ from app import (
     push_pages,
     pwa,
     reminder_pages,
+    reminder_scheduler,
     task_pages,
 )
 from app.bootstrap import run_bootstrap
@@ -37,7 +38,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         logger.error("Inloggen is niet ingesteld; ontbrekend: %s", ", ".join(missing))
     with new_session() as db:
         run_bootstrap(db, settings)
-    yield
+    async with reminder_scheduler.running():
+        yield
 
 
 def create_app() -> FastAPI:
