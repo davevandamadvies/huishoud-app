@@ -1173,3 +1173,130 @@ body.sheet-open {
 .item-meta > span {
   white-space: nowrap;
 }
+
+/* ---- Planning ---- */
+
+.weekstrip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.weekstrip ul {
+  display: flex;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weekstrip li {
+  flex: 1;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch);
+  padding: var(--space-1) 0;
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+
+.day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.day-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  border-radius: 50%;
+}
+
+.day-num.is-today {
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+}
+
+.day[aria-current="date"] .day-num {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.day-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.day-dot.has-items {
+  background: var(--color-check-border);
+}
+
+.day[aria-current="date"] .day-dot.has-items {
+  background: var(--color-accent);
+}
+
+.week-arrow {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: var(--touch);
+  color: var(--color-text-muted);
+}
+
+.week-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+.time {
+  flex: none;
+  width: 44px;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.stack-tight {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.list-button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.list-button:hover {
+  background: var(--color-bg);
+}
+
+li + li > .list-button {
+  border-top: 1px solid var(--color-divider);
+}
+
+.list-button .item-title,
+.list-button .item-meta {
+  display: flex;
+}
+
+.pick-list {
+  max-height: 50vh;
+  overflow-y: auto;
+}

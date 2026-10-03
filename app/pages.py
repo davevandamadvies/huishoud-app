@@ -61,7 +61,6 @@ def _placeholder(key: str, title: str):
     return page
 
 
-router.add_api_route("/planning", _placeholder("planning", "Planning"), methods=["GET"])
 router.add_api_route("/scores", _placeholder("scores", "Scores"), methods=["GET"])
 
 
