@@ -1,0 +1,20 @@
+<div id="pick-list">
+  {% if tasks %}
+  <ul class="list pick-list">
+    {% for t in tasks %}
+    <li>
+      <button class="list-item list-button" type="button"
+              hx-get="/taken/{{ t.id }}/inplannen?datum={{ day.isoformat() }}&na=event" hx-target="#sheet" hx-swap="innerHTML">
+        <span class="dot cat-{{ t.category.color }}" aria-hidden="true"></span>
+        <span class="item-body">
+          <span class="item-title">{{ t.name }}</span>
+          <span class="item-meta"><span>{{ t.category.name }}</span><span>· {{ describe(t.rule)|lower }}</span></span>
+        </span>
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">Geen taken gevonden die nog niet zijn ingepland.</p>
+  {% endif %}
+</div>

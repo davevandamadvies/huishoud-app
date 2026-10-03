@@ -1,0 +1,72 @@
+<div id="planning-content" class="stack"
+     hx-get="/planning/inhoud?dag={{ view.day.isoformat() }}" hx-trigger="occurrences-changed from:body"
+     hx-swap="outerHTML" hx-disinherit="*">
+  <header class="page-header-row">
+    <h1 class="page-title">Planning</h1>
+    <p class="page-eyebrow">{{ month_label }}</p>
+  </header>
+
+  <nav class="weekstrip" aria-label="Week">
+    <a class="week-arrow" href="/planning?dag={{ view.previous_week.isoformat() }}"
+       hx-get="/planning/inhoud?dag={{ view.previous_week.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML"
+       hx-push-url="/planning?dag={{ view.previous_week.isoformat() }}" aria-label="Vorige week">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <ul>
+      {% for d in view.days %}
+      <li>
+        <a class="day" href="/planning?dag={{ d.date.isoformat() }}"
+           hx-get="/planning/inhoud?dag={{ d.date.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML"
+           hx-push-url="/planning?dag={{ d.date.isoformat() }}"
+           {% if d.date == view.day %}aria-current="date"{% endif %}
+           aria-label="{{ dutch_date(d.date) }}{% if d.has_items %}, iets gepland{% endif %}">
+          <span class="day-name" aria-hidden="true">{{ short_weekday(d.date) }}</span>
+          <span class="day-num{% if d.date == today %} is-today{% endif %}" aria-hidden="true">{{ d.date.day }}</span>
+          <span class="day-dot{% if d.has_items %} has-items{% endif %}" aria-hidden="true"></span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    <a class="week-arrow" href="/planning?dag={{ view.next_week.isoformat() }}"
+       hx-get="/planning/inhoud?dag={{ view.next_week.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML"
+       hx-push-url="/planning?dag={{ view.next_week.isoformat() }}" aria-label="Volgende week">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+  </nav>
+
+  <section aria-labelledby="day-title">
+    <h2 class="section-title" id="day-title">{{ dutch_date(view.day)|capitalize }}</h2>
+    {% if view.items %}
+    <ul class="list">
+      {% for occ in view.items %}
+      {% set who = responsible(occ) %}
+      <li class="list-item task-row">
+        <span class="time">{{ occ.planned_time.strftime('%H:%M') if occ.planned_time else "—" }}</span>
+        <a class="item-body item-link" href="/taken/{{ occ.task.id }}">
+          <div class="item-title">{{ occ.task.name }}</div>
+          <div class="item-meta">
+            <span class="dot cat-{{ occ.task.category.color }}" aria-hidden="true"></span>
+            {% if who|length > 1 %}
+            <span>Samen</span>
+            <span class="avatar-stack avatar-stack-sm">{% for u in who %}<span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>{% endfor %}</span>
+            {% elif who %}
+            <span>{{ who[0].display_name }}</span>
+            {% else %}
+            <span>Nog niemand</span>
+            {% endif %}
+          </div>
+        </a>
+        <button class="check" type="button" hx-get="/taken/{{ occ.task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML" aria-label="{{ occ.task.name }} afvinken"></button>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state"><strong>Niets gepland</strong>Een rustige dag. Plan hieronder iets in als je wilt.</div>
+    {% endif %}
+  </section>
+
+  <button class="button button-outline" type="button" hx-get="/planning/kies?datum={{ view.day.isoformat() }}" hx-target="#sheet" hx-swap="innerHTML">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+    Plan een taak
+  </button>
+</div>

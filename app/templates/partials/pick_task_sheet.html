@@ -1,0 +1,26 @@
+<div class="sheet-backdrop" data-close-sheet></div>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet-handle" aria-hidden="true"></div>
+  <button class="sheet-close" type="button" data-close-sheet aria-label="Sluiten">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <div>
+    <p class="item-meta">{{ dutch_date(day)|capitalize }}</p>
+    <h2 class="sheet-title" id="sheet-title" tabindex="-1">Welke taak plan je in?</h2>
+  </div>
+  <form class="stack-tight" role="search" hx-get="/planning/kies/lijst" hx-target="#pick-list" hx-swap="outerHTML"
+        hx-trigger="input changed delay:300ms from:#pick-q, change from:#pick-category, submit">
+    <input type="hidden" name="datum" value="{{ day.isoformat() }}">
+    <label class="search-field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <span class="visually-hidden">Zoek een taak</span>
+      <input id="pick-q" type="search" name="q" placeholder="Zoek een taak" autocomplete="off" data-autofocus>
+    </label>
+    <label class="visually-hidden" for="pick-category">Categorie</label>
+    <select class="input" id="pick-category" name="categorie">
+      <option value="">Alle categorieën</option>
+      {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+    </select>
+  </form>
+  {% include "partials/pick_task_list.html" %}
+</section>
