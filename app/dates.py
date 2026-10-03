@@ -35,9 +35,12 @@ def today() -> date:
     return datetime.now(TIMEZONE).date()
 
 
-def dutch_date(value: date) -> str:
-    """Bijv. 'zaterdag 3 oktober'."""
-    return f"{_WEEKDAYS[value.weekday()]} {value.day} {_MONTHS[value.month - 1]}"
+def dutch_date(value: date, reference: date | None = None) -> str:
+    """Bijv. 'zaterdag 3 oktober'; met jaartal als het niet dit jaar is."""
+    text = f"{_WEEKDAYS[value.weekday()]} {value.day} {_MONTHS[value.month - 1]}"
+    if value.year != (reference or today()).year:
+        text += f" {value.year}"
+    return text
 
 
 _SHORT_MONTHS = (
@@ -56,9 +59,12 @@ _SHORT_MONTHS = (
 )
 
 
-def short_date(value: date) -> str:
-    """Bijv. '3 okt'."""
-    return f"{value.day} {_SHORT_MONTHS[value.month - 1]}"
+def short_date(value: date, reference: date | None = None) -> str:
+    """Bijv. '3 okt'; met jaartal als het niet dit jaar is ('3 okt 2027')."""
+    text = f"{value.day} {_SHORT_MONTHS[value.month - 1]}"
+    if value.year != (reference or today()).year:
+        text += f" {value.year}"
+    return text
 
 
 def due_label(due: date | None, reference: date) -> tuple[str, str]:
@@ -75,7 +81,7 @@ def due_label(due: date | None, reference: date) -> tuple[str, str]:
         return "morgen", "soon"
     if days <= 30:
         return f"over {days} d", "later"
-    return short_date(due), "later"
+    return short_date(due, reference), "later"
 
 
 _SHORT_WEEKDAYS = ("ma", "di", "wo", "do", "vr", "za", "zo")
@@ -96,7 +102,7 @@ def plan_label(planned: date, at: time | None, reference: date) -> str:
         return f"gepland morgen{clock}"
     if 1 < days < 7:
         return f"gepland {short_weekday(planned)}{clock}"
-    return f"gepland {short_date(planned)}{clock}"
+    return f"gepland {short_date(planned, reference)}{clock}"
 
 
 def when_label(moment: datetime, reference: date) -> str:
@@ -108,4 +114,4 @@ def when_label(moment: datetime, reference: date) -> str:
         return f"vandaag {clock}"
     if days == 1:
         return f"gisteren {clock}"
-    return f"{short_weekday(local.date())} {short_date(local.date())}"
+    return f"{short_weekday(local.date())} {short_date(local.date(), reference)}"
