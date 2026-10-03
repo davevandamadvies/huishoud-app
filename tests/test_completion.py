@@ -156,7 +156,7 @@ def test_complete_via_sheet(client: TestClient, db: Session, user: User) -> None
         headers=HTMX_HEADERS,
     )
     assert r.status_code == 200 and r.text == ""
-    assert r.headers["hx-trigger"] == "occurrence-completed"
+    assert r.headers["hx-trigger"] == "occurrences-changed"
     assert statuses(db, task.id)[-1] == ("open", today() + timedelta(days=7))
 
 

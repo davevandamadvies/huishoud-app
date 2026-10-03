@@ -69,7 +69,7 @@ def test_today_page(client: TestClient, db: Session, user: User) -> None:
     assert "Badkamer" in html and "iedereen" in html
     assert "Binnenkort" in html and "over 2 d" in html and "· Dave" in html
     assert 'aria-label="Badkamer afvinken"' in html
-    assert 'hx-trigger="occurrence-completed from:body"' in html
+    assert 'hx-trigger="occurrences-changed from:body"' in html
     assert partner.display_name not in html
 
 
@@ -105,7 +105,7 @@ def test_complete_from_today_refreshes_lists(
         },
         headers=HTMX_HEADERS,
     )
-    assert r.headers["hx-trigger"] == "occurrence-completed"
+    assert r.headers["hx-trigger"] == "occurrences-changed"
     html = client.get("/vandaag/lijsten").text
     assert "is-done" in html
 

@@ -1,4 +1,4 @@
-<div id="today-lists" class="stack" hx-get="/vandaag/lijsten" hx-trigger="occurrence-completed from:body" hx-swap="outerHTML" hx-disinherit="*">
+<div id="today-lists" class="stack" hx-get="/vandaag/lijsten" hx-trigger="occurrences-changed from:body" hx-swap="outerHTML" hx-disinherit="*">
   <section class="week" aria-label="Deze week">
     <div class="week-summary">
       {% if view.week_total %}

@@ -1079,6 +1079,23 @@ body.sheet-open {
   outline-offset: 2px;
 }
 
+.sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field-narrow {
+  flex: 0 0 132px;
+  width: 132px;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .card-row {
   flex-direction: row;
   align-items: center;
@@ -1140,4 +1157,19 @@ body.sheet-open {
     transition: none !important;
     animation: none !important;
   }
+}
+
+.inline-fields > .field:not(.field-narrow) {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Metaregel: onderdelen niet afbreken, wel als geheel doorlopen */
+.item-meta {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.item-meta > span {
+  white-space: nowrap;
 }

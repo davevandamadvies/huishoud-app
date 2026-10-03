@@ -1,6 +1,6 @@
 """Datumhulpjes: tijdzone van het huishouden en Nederlandse weergave."""
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
 TIMEZONE = ZoneInfo("Europe/Amsterdam")
@@ -76,3 +76,24 @@ def due_label(due: date | None, reference: date) -> tuple[str, str]:
     if days <= 30:
         return f"over {days} d", "later"
     return short_date(due), "later"
+
+
+_SHORT_WEEKDAYS = ("ma", "di", "wo", "do", "vr", "za", "zo")
+
+
+def short_weekday(value: date) -> str:
+    """Bijv. 'za'."""
+    return _SHORT_WEEKDAYS[value.weekday()]
+
+
+def plan_label(planned: date, at: time | None, reference: date) -> str:
+    """Bijv. 'gepland 10:00' (vandaag), 'gepland morgen', 'gepland za 10:00'."""
+    clock = f" {at.strftime('%H:%M')}" if at else ""
+    days = (planned - reference).days
+    if days == 0:
+        return f"gepland{clock}" if clock else "gepland vandaag"
+    if days == 1:
+        return f"gepland morgen{clock}"
+    if 1 < days < 7:
+        return f"gepland {short_weekday(planned)}{clock}"
+    return f"gepland {short_date(planned)}{clock}"

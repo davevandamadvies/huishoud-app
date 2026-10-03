@@ -39,6 +39,9 @@
 
     {% include "partials/next_preview.html" %}
 
-    <button class="button" type="submit">Gedaan</button>
+    <div class="sheet-actions">
+      <button class="button" type="submit">Gedaan</button>
+      <button class="button button-text" type="button" hx-get="/taken/{{ task.id }}/inplannen?na={{ after }}" hx-target="#sheet" hx-swap="innerHTML">Liever inplannen</button>
+    </div>
   </form>
 </section>

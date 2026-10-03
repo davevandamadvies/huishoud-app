@@ -1,0 +1,50 @@
+<div class="sheet-backdrop" data-close-sheet></div>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet-handle" aria-hidden="true"></div>
+  <button class="sheet-close" type="button" data-close-sheet aria-label="Sluiten">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+  <div>
+    <p class="item-meta"><span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>{{ task.category.name }} · {{ describe(task.rule)|lower }}</p>
+    <h2 class="sheet-title" id="sheet-title" tabindex="-1">{{ "Verzetten" if planned else "Inplannen" }}: {{ task.name }}</h2>
+  </div>
+
+  <form class="sheet-form" hx-post="/taken/{{ task.id }}/inplannen" hx-target="#sheet" hx-swap="innerHTML">
+    <input type="hidden" name="after" value="{{ after }}">
+    {% if error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+
+    <div class="inline-fields">
+      <div class="field">
+        <label class="label" for="planned_date">Datum</label>
+        <input class="input" id="planned_date" name="planned_date" type="date" required
+               min="{{ min_date }}" max="{{ max_date }}" value="{{ values.planned_date }}" data-autofocus>
+      </div>
+      <div class="field field-narrow">
+        <label class="label" for="planned_time">Tijd <span class="label-note">(optioneel)</span></label>
+        <input class="input" id="planned_time" name="planned_time" type="time" value="{{ values.planned_time }}">
+      </div>
+    </div>
+
+    <fieldset class="field">
+      <legend class="label">Wie doet het? <span class="label-note">(geen keuze = iedereen)</span></legend>
+      <div class="who-list">
+        {% for u in users %}
+        <label class="who">
+          <input type="checkbox" name="owner" value="{{ u.id }}"{% if u.id in values.owners %} checked{% endif %}>
+          <span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>
+          <span>{{ u.display_name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <button class="button" type="submit">{{ "Opslaan" if planned else "Inplannen" }}</button>
+  </form>
+
+  {% if planned %}
+  <form hx-post="/taken/{{ task.id }}/planning-annuleren" hx-target="#sheet" hx-swap="innerHTML" hx-confirm="Planning van {{ task.name }} annuleren?">
+    <input type="hidden" name="after" value="{{ after }}">
+    <button class="button button-text" type="submit">Planning annuleren</button>
+  </form>
+  {% endif %}
+</section>
