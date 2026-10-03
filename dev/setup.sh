@@ -79,6 +79,13 @@ INITIAL_ADMIN_NAME=Dave
 APPENV
 fi
 
+# VAPID-sleutels voor meldingen (gemaakt met de app zelf).
+if ! grep -q '^VAPID_PUBLIC_KEY=' "$SECRETS/app.env"; then
+  "${COMPOSE[@]}" run --rm --no-deps --build app python -m app.push sleutels |
+    grep '^VAPID_[A-Z_]*_KEY=' >>"$SECRETS/app.env"
+  echo "VAPID_SUBJECT=mailto:dave@example.com" >>"$SECRETS/app.env"
+fi
+
 # Authelia-database klaarzetten en de subjects registreren.
 "${COMPOSE[@]}" run --rm --no-deps authelia authelia storage migrate up >/dev/null
 for user in dave partner; do

@@ -16,7 +16,15 @@ from tests.factories import make_user
 # Tests draaien nooit met productie-instellingen.
 os.environ["APP_ENV"] = "test"
 os.environ.pop("INITIAL_ADMIN_SUB", None)
-for _name in ("BASE_URL", "OIDC_ISSUER", "OIDC_CLIENT_ID", "OIDC_CLIENT_SECRET"):
+for _name in (
+    "BASE_URL",
+    "OIDC_ISSUER",
+    "OIDC_CLIENT_ID",
+    "OIDC_CLIENT_SECRET",
+    "VAPID_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY",
+    "VAPID_SUBJECT",
+):
     os.environ.pop(_name, None)
 
 BASE_URL = "https://testserver"

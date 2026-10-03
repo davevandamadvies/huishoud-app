@@ -1,0 +1,37 @@
+{% include "partials/messages.html" %}
+{% if not push_enabled %}
+<p class="empty-state"><strong>Nog niet ingesteld</strong>Meldingen staan nog niet aan op de server. Vraag de beheerder om de VAPID-sleutels in te vullen.</p>
+{% else %}
+<section data-push data-push-key="{{ vapid_public_key }}">
+  <h2 class="section-title">Dit toestel</h2>
+  <p class="push-status item-meta" data-push-status role="status">Even kijken of meldingen hier kunnen…</p>
+  <div class="button-row">
+    <button class="button" type="button" data-push-subscribe hidden>Meldingen aanzetten</button>
+    <button class="button button-outline" type="button" data-push-unsubscribe hidden>Uitzetten op dit toestel</button>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-title">Mijn toestellen</h2>
+  {% if devices %}
+  <ul class="list">
+    {% for device in devices %}
+    <li class="list-item">
+      <div class="item-body">
+        <div class="item-title">{{ device.label }}</div>
+        <div class="item-meta">Sinds {{ device.created_at | local_date | dutch_date }}{% if device.last_used_at %} · laatste melding {{ device.last_used_at | local_date | dutch_date }}{% endif %}</div>
+      </div>
+      <button class="button button-text" type="button"
+              hx-post="/meldingen/{{ device.id }}/verwijderen" hx-target="#push-panel" hx-swap="innerHTML"
+              aria-label="{{ device.label }} verwijderen">Verwijderen</button>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="button-row">
+    <button class="button button-outline" type="button" hx-post="/meldingen/test" hx-target="#push-panel" hx-swap="innerHTML">Testmelding sturen</button>
+  </div>
+  {% else %}
+  <p class="empty-state">Nog geen toestellen. Zet meldingen aan op je telefoon om herinneringen te krijgen.</p>
+  {% endif %}
+</section>
+{% endif %}

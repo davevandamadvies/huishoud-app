@@ -647,6 +647,21 @@ fieldset.field {
   cursor: pointer;
 }
 
+.button[hidden] {
+  display: none;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.push-status {
+  margin: 0;
+}
+
 .button:hover {
   background: var(--color-accent-hover);
 }

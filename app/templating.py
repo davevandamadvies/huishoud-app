@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
 
-from app.dates import dutch_date
+from app.dates import dutch_date, local_date
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
@@ -36,3 +36,4 @@ def static_url(path: str) -> str:
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.globals.update(nav_items=NAV_ITEMS, static_url=static_url)
 templates.env.filters["dutch_date"] = dutch_date
+templates.env.filters["local_date"] = local_date

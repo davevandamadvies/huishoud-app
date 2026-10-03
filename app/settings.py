@@ -32,6 +32,17 @@ class Settings(BaseSettings):
     oidc_client_secret: SecretStr | None = None
     oidc_scopes: str = "openid profile"
 
+    # Web Push (VAPID). Zonder sleutels staan meldingen uit.
+    vapid_public_key: str | None = None
+    vapid_private_key: SecretStr | None = None
+    vapid_subject: str | None = None
+
+    @property
+    def push_enabled(self) -> bool:
+        return bool(
+            self.vapid_public_key and self.vapid_private_key and self.vapid_subject
+        )
+
     @field_validator("base_url", "oidc_issuer")
     @classmethod
     def _strip_trailing_slash(cls, value: str | None) -> str | None:
