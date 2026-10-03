@@ -37,7 +37,17 @@ docker compose -f compose.dev.yml up --build
 ```
 
 Open daarna <https://huishoud.localhost:8443> (de browser waarschuwt eenmalig
-voor het lokale certificaat van Caddy).
+voor het lokale certificaat van Caddy). De database wordt in deze omgeving bij
+het starten automatisch bijgewerkt.
+
+Startvulling (45 taken) laden, terwijl de omgeving draait:
+
+```sh
+docker compose -f compose.dev.yml exec app python -m app.seed
+```
+
+Werkt `huishoud.localhost` niet in je browser (bijv. Safari), voeg dan deze regel
+toe aan `/etc/hosts`: `127.0.0.1 huishoud.localhost auth.huishoud.localhost`.
 
 - Testaccounts: `dave` (wordt beheerder) en `partner`, wachtwoord `huishoud-dev`.
 - Alle geheimen staan in `dev/.secrets/` (in `.gitignore`); `./dev/setup.sh --reset`
