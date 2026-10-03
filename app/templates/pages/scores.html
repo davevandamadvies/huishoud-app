@@ -3,15 +3,75 @@
 <header>
   <h1 class="page-title">Scores</h1>
 </header>
-{% if request.state.competition %}
-<div class="empty-state">
-  <strong>Nog geen scores</strong>
-  Vink taken af met punten; het scorebord verschijnt hier.
-</div>
-{% else %}
+{% if not request.state.competition %}
 <div class="card">
   <p>De competitie staat uit. Punten zijn altijd optioneel: zet de competitie aan als je samen punten wilt sparen.</p>
   <a class="button button-outline" href="/meer">Naar Instellingen</a>
 </div>
+{% else %}
+{% set cat = "&categorie=%d" % selected_category if selected_category else "" %}
+<nav class="segmented" aria-label="Periode">
+  {% for value, label in periods %}
+  <a class="segment" href="/scores?periode={{ value.value }}{{ cat }}"{% if value == period %} aria-current="true"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+<section class="list score-board" aria-label="Stand">
+  {% for s in board.standings %}
+  <div class="score">
+    <span class="avatar avatar-lg avatar-{{ s.user.avatar_color }}" aria-hidden="true">{{ s.user.initial }}</span>
+    <div class="score-name">{{ s.user.display_name }}</div>
+    <div class="score-points">{{ s.points }}</div>
+    {% if board.leader and board.leader.user.id == s.user.id %}
+    <div class="score-label leader">Koploper</div>
+    {% elif board.leader %}
+    <div class="score-label">{{ board.top - s.points }} achter</div>
+    {% elif board.top > 0 %}
+    <div class="score-label">Gelijk</div>
+    {% else %}
+    <div class="score-label">&nbsp;</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+
+<nav class="chips" aria-label="Filter op categorie">
+  <a class="chip" href="/scores?periode={{ period.value }}"{% if not selected_category %} aria-current="true"{% endif %}>Alles</a>
+  {% for c in categories %}
+  <a class="chip" href="/scores?periode={{ period.value }}&categorie={{ c.id }}"{% if selected_category == c.id %} aria-current="true"{% endif %}><span class="dot cat-{{ c.color }}" aria-hidden="true"></span>{{ c.name }}</a>
+  {% endfor %}
+</nav>
+
+<section aria-labelledby="recent-title">
+  <h2 class="section-title" id="recent-title">Laatste punten</h2>
+  {% if board.entries %}
+  <ul class="list">
+    {% for e in board.entries %}
+    <li class="list-item">
+      {% if e.kind == "done" %}
+      <span class="avatar-stack">{% for u in e.users %}<span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>{% endfor %}</span>
+      <div class="item-body">
+        <div class="item-title">{{ e.task.name }}</div>
+        <div class="item-meta">
+          {% if e.users|length > 1 %}<span>samen · {{ e.points }} p → ieder {{ e.each }}</span>{% else %}<span>{{ e.users[0].display_name if e.users else "" }}</span>{% endif %}
+          <span>· {{ when_label(e.when, today) }}</span>
+        </div>
+      </div>
+      <span class="item-end points-plus">+{{ e.each }}</span>
+      {% else %}
+      <span class="avatar avatar-{{ e.actor.avatar_color if e.actor else 1 }}" aria-hidden="true">{{ e.actor.initial if e.actor else "?" }}</span>
+      <div class="item-body">
+        <div class="item-title">{{ e.task.name if e.task else "Taak" }}</div>
+        <div class="item-meta"><span>punten gewijzigd door {{ e.actor.display_name if e.actor else "onbekend" }}: {{ e.old or "–" }} → {{ e.new or "–" }}</span></div>
+      </div>
+      <span class="item-end">wijziging</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty-state"><strong>Nog geen punten</strong>Vink taken af met punten; ze verschijnen hier.</div>
+  {% endif %}
+</section>
 {% endif %}
 {% endblock %}
