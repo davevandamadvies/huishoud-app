@@ -91,7 +91,7 @@ def test_dutch_date() -> None:
 def test_pages_require_login(anon_client: TestClient) -> None:
     response = anon_client.get("/taken?filter=a")
     assert response.status_code == 303
-    assert response.headers["location"] == "/auth/login?next=/taken%3Ffilter%3Da"
+    assert response.headers["location"] == "/auth/login?next=/taken"
 
 
 def test_htmx_request_without_session_gets_hx_redirect(

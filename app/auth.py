@@ -32,17 +32,33 @@ class NotAuthenticated(Exception):
     """Geen geldige sessie; wordt omgezet in een redirect naar de login."""
 
 
+# Doelen na het inloggen: alleen bekende pagina's (allowlist), zodat er nooit
+# een door de gebruiker aangeleverde URL in een redirect of cookie belandt.
+_NEXT_PAGES = (
+    "/",
+    "/planning",
+    "/taken",
+    "/taken/nieuw",
+    "/scores",
+    "/meer",
+    "/categorieen",
+    "/beheer/gebruikers",
+)
+_NEXT_DETAIL_PREFIXES = ("/taken", "/categorieen", "/beheer/gebruikers")
+
+
 def safe_next(target: str | None) -> str:
-    """Alleen paden binnen de app als doel na het inloggen (geen open redirect)."""
-    if (
-        not target
-        or not target.startswith("/")
-        or target.startswith("//")
-        or "\\" in target
-        or target.startswith("/auth/")
-    ):
-        return "/"
-    return target
+    """Veilig doel na het inloggen; de querystring vervalt (geen open redirect)."""
+    path = (target or "").split("?", 1)[0]
+    for page in _NEXT_PAGES:
+        if path == page:
+            return page
+    prefix, _, tail = path.rpartition("/")
+    if tail.isdecimal() and len(tail) <= 9:
+        for allowed in _NEXT_DETAIL_PREFIXES:
+            if prefix == allowed:
+                return f"{allowed}/{int(tail)}"
+    return "/"
 
 
 def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> User:
