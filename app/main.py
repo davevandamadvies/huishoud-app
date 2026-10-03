@@ -44,6 +44,8 @@ def create_app() -> FastAPI:
     app.add_middleware(
         SecurityHeadersMiddleware,
         csp_exempt_paths=("/docs", "/redoc") if docs_enabled else (),
+        hsts=settings.app_env == "prod"
+        and (settings.base_url or "").startswith("https://"),
     )
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(auth.router)
