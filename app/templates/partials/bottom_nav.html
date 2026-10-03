@@ -1,0 +1,12 @@
+<nav class="bottom-nav" aria-label="Hoofdmenu">
+  <ul>
+    {% for item in nav_items %}
+    <li>
+      <a href="{{ item.path }}"{% if item.key == active_nav %} aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{% include "icons/" ~ item.key ~ ".svg" %}</svg>
+        <span>{{ item.label }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>

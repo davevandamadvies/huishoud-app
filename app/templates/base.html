@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf7f2">
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false, "selfRequestsOnly": true}'>
+  <title>{% block title %}{{ page_title }}{% endblock %} · Huishoud</title>
+  <link rel="preload" href="{{ static_url('vendor/figtree/figtree-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="{{ static_url('icon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ static_url('css/app.css') }}">
+  <script src="{{ static_url('vendor/htmx/htmx.min.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#inhoud">Naar de inhoud</a>
+  <main id="inhoud" class="page">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/bottom_nav.html" %}
+</body>
+</html>
