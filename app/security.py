@@ -36,10 +36,19 @@ SECURITY_HEADERS = {
 class SecurityHeadersMiddleware:
     """Voegt vaste beveiligingsheaders toe (pure ASGI, ook voor statische bestanden)."""
 
-    def __init__(self, app: ASGIApp, csp_exempt_paths: tuple[str, ...] = ()) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        csp_exempt_paths: tuple[str, ...] = (),
+        hsts: bool = False,
+    ) -> None:
         self.app = app
         # Alleen voor de OpenAPI-docs in dev (die laden scripts van een CDN).
         self.csp_exempt_paths = csp_exempt_paths
+        # HSTS alleen als de app via HTTPS wordt aangeboden (productie).
+        self.extra_headers = (
+            {"strict-transport-security": "max-age=31536000"} if hsts else {}
+        )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -52,7 +61,7 @@ class SecurityHeadersMiddleware:
             if message["type"] == "http.response.start":
                 headers = list(message.get("headers", []))
                 present = {name.lower() for name, _ in headers}
-                for name, value in SECURITY_HEADERS.items():
+                for name, value in (SECURITY_HEADERS | self.extra_headers).items():
                     if skip_csp and name == "content-security-policy":
                         continue
                     if name.encode() not in present:

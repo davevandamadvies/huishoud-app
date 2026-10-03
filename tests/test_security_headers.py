@@ -50,3 +50,20 @@ def test_csrf_allows_same_origin_htmx(anon_client: TestClient) -> None:
         "/auth/logout", headers={"Origin": BASE_URL, "HX-Request": "true"}
     )
     assert response.status_code == 204
+
+
+def test_hsts_only_in_prod_over_https(db: object, monkeypatch) -> None:  # noqa: ANN001
+    from app.main import create_app
+    from app.settings import get_settings
+
+    assert "strict-transport-security" not in client.get("/healthz").headers
+    monkeypatch.setenv("APP_ENV", "prod")
+    monkeypatch.setenv("BASE_URL", "https://huishoud.example.com")
+    get_settings.cache_clear()
+    try:
+        prod = TestClient(create_app())
+        assert prod.get("/healthz").headers["strict-transport-security"] == (
+            "max-age=31536000"
+        )
+    finally:
+        get_settings.cache_clear()

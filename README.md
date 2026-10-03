@@ -60,6 +60,7 @@ voor het lokale certificaat van Caddy).
 | `OIDC_CLIENT_ID` | – | Client-ID van de app in Authelia |
 | `OIDC_CLIENT_SECRET` | – | Client-secret (geheim, alleen in `.env`) |
 | `OIDC_SCOPES` | `openid profile` | Gevraagde scopes |
+| `FORWARDED_ALLOW_IPS` | `127.0.0.1` | (uvicorn) IP van de reverse proxy waarvan `X-Forwarded-*` wordt vertrouwd |
 
 Ontbreken `BASE_URL` of `OIDC_*`, dan start de app wel (healthcheck werkt), maar
 blijft hij dicht: inloggen toont "Inloggen is nog niet ingesteld".
@@ -83,6 +84,11 @@ docker compose run --rm <service> python -m app.seed        # op de NAS
 Het commando is veilig om opnieuw te draaien: taken die al bestaan (zelfde naam)
 worden overgeslagen. De taken krijgen nog geen datum; ze verschijnen onder
 Taken als "nog geen datum" tot je ze afvinkt of een "volgende keer" invult.
+
+## Productie
+
+Zie [docs/productie.md](docs/productie.md) voor de inrichting achter een reverse
+proxy met HTTPS, de Authelia-client en de eerste beheerder.
 
 ## Migraties in productie
 
