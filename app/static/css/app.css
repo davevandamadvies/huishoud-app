@@ -363,6 +363,74 @@ li + li > .list-link {
   height: 20px;
 }
 
+/* ---- Zoeken ---- */
+
+.search {
+  margin: 0;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+}
+
+.search-field:focus-within {
+  border-color: var(--color-accent);
+}
+
+.search-field svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-muted);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  font-size: var(--text-base);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.item-body {
+  min-width: 0;
+}
+
+.due-late {
+  color: var(--color-late);
+}
+
+.due-soon {
+  color: var(--color-text);
+}
+
+.due-later,
+.due-none {
+  color: var(--color-text-muted);
+}
+
+.due-none {
+  font-weight: 400;
+}
+
+.text-link {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
 /* ---- Formulieren ---- */
 
 .form {
@@ -400,6 +468,86 @@ li + li > .list-link {
   border-color: var(--color-accent);
 }
 
+.label-note {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.field .hint {
+  padding: 0;
+  font-size: var(--text-sm);
+}
+
+.field-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-error);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+
+.input-number {
+  max-width: 120px;
+}
+
+.textarea {
+  min-height: 96px;
+  padding: var(--space-3) 14px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.inline-fields {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.inline-fields select {
+  flex: 1;
+}
+
+fieldset.field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch);
+  font-size: var(--text-base);
+  cursor: pointer;
+}
+
+.option input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+/* Bij een eenmalige taak is het interval niet van toepassing. */
+.form:has(input[name="recurrence_type"][value="once"]:checked) .interval-field {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .alert {
   margin: 0;
   padding: var(--space-3) var(--space-4);
@@ -410,6 +558,11 @@ li + li > .list-link {
 .alert-error {
   color: var(--color-error);
   background: var(--color-error-soft);
+}
+
+.alert-info {
+  color: var(--color-text);
+  background: var(--color-track);
 }
 
 .alert-success {
@@ -529,6 +682,20 @@ li + li > .list-link {
   background: var(--color-error-soft);
 }
 
+.chips {
+  display: flex;
+  gap: var(--space-2);
+  margin: -6px calc(-1 * var(--space-5));
+  padding: 0 var(--space-5);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+a.chip {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
 /* Filterpil: oogt 36px hoog, aanraakvlak is 44px */
 .chip {
   position: relative;
@@ -554,7 +721,8 @@ li + li > .list-link {
   inset: -5px 0;
 }
 
-.chip[aria-pressed="true"] {
+.chip[aria-pressed="true"],
+.chip[aria-current="true"] {
   color: var(--color-on-accent);
   background: var(--color-chip-active);
   border-color: var(--color-chip-active);

@@ -1,0 +1,29 @@
+<div id="task-list">
+  {% if rows %}
+  <ul class="list">
+    {% for row in rows %}
+    {% set label, tone = due_label(row.next_date, today) %}
+    <li>
+      <a class="list-item list-link" href="/taken/{{ row.task.id }}">
+        <span class="dot cat-{{ row.task.category.color }}" aria-hidden="true"></span>
+        <div class="item-body">
+          <div class="item-title">{{ row.task.name }}</div>
+          <div class="item-meta">
+            <span>{{ describe(row.task.rule) }}</span>
+            {% if row.task.owner %}<span>· {{ row.task.owner.display_name }}</span>{% endif %}
+            <span class="visually-hidden">· {{ row.task.category.name }}</span>
+          </div>
+        </div>
+        <span class="item-end due-{{ tone }}">{{ label }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif q or selected_category %}
+  <div class="empty-state"><strong>Niets gevonden</strong>Probeer een andere zoekterm of categorie.</div>
+  {% elif archived %}
+  <div class="empty-state"><strong>Archief is leeg</strong>Gearchiveerde taken verschijnen hier.</div>
+  {% else %}
+  <div class="empty-state"><strong>Nog geen taken</strong>Voeg je eerste taak toe met de groene knop.</div>
+  {% endif %}
+</div>
