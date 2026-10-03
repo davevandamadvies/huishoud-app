@@ -2,6 +2,17 @@
 
 from app.models.audit import AuditLog
 from app.models.category import Category
+from app.models.task import Occurrence, OccurrenceStatus, Task
 from app.models.user import Role, User, UserSession, UserStatus
 
-__all__ = ["AuditLog", "Category", "Role", "User", "UserSession", "UserStatus"]
+__all__ = [
+    "AuditLog",
+    "Category",
+    "Occurrence",
+    "OccurrenceStatus",
+    "Task",
+    "Role",
+    "User",
+    "UserSession",
+    "UserStatus",
+]

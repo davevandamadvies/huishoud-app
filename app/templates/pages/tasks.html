@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  <h1 class="page-title">{{ "Archief" if archived else "Taken" }}</h1>
+</header>
+
+<form class="search" role="search" action="/taken" method="get"
+      hx-get="/taken/lijst" hx-target="#task-list" hx-swap="outerHTML"
+      hx-trigger="input changed delay:300ms from:#q, search from:#q, submit">
+  <label class="search-field">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <span class="visually-hidden">Zoek een taak</span>
+    <input id="q" type="search" name="q" value="{{ q }}" placeholder="Zoek een taak" autocomplete="off">
+  </label>
+  {% if selected_category %}<input type="hidden" name="categorie" value="{{ selected_category }}">{% endif %}
+  {% if archived %}<input type="hidden" name="archief" value="1">{% endif %}
+</form>
+
+<nav class="chips" aria-label="Filter op categorie">
+  {% set base = "/taken?" ~ ("archief=1&" if archived else "") ~ ("q=" ~ q|urlencode ~ "&" if q else "") %}
+  <a class="chip" href="{{ base }}"{% if not selected_category %} aria-current="true"{% endif %}>Alles</a>
+  {% for c in categories %}
+  <a class="chip" href="{{ base }}categorie={{ c.id }}"{% if selected_category == c.id %} aria-current="true"{% endif %}>
+    <span class="dot cat-{{ c.color }}" aria-hidden="true"></span>{{ c.name }}
+  </a>
+  {% endfor %}
+</nav>
+
+{% include "partials/task_list.html" %}
+
+{% if archived %}
+<a class="text-link" href="/taken">Terug naar de taken</a>
+{% elif archived_count %}
+<a class="text-link" href="/taken?archief=1">Archief ({{ archived_count }})</a>
+{% endif %}
+
+{% if not archived %}
+<a class="fab" href="/taken/nieuw" aria-label="Taak toevoegen">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+</a>
+{% endif %}
+{% endblock %}

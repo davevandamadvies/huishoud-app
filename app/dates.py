@@ -38,3 +38,41 @@ def today() -> date:
 def dutch_date(value: date) -> str:
     """Bijv. 'zaterdag 3 oktober'."""
     return f"{_WEEKDAYS[value.weekday()]} {value.day} {_MONTHS[value.month - 1]}"
+
+
+_SHORT_MONTHS = (
+    "jan",
+    "feb",
+    "mrt",
+    "apr",
+    "mei",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "okt",
+    "nov",
+    "dec",
+)
+
+
+def short_date(value: date) -> str:
+    """Bijv. '3 okt'."""
+    return f"{value.day} {_SHORT_MONTHS[value.month - 1]}"
+
+
+def due_label(due: date | None, reference: date) -> tuple[str, str]:
+    """Korte tekst en toon ('late', 'soon', 'later', 'none') voor een datum."""
+    if due is None:
+        return "nog geen datum", "none"
+    days = (due - reference).days
+    if days < 0:
+        late = -days
+        return (f"{late} dag te laat" if late == 1 else f"{late} dagen te laat"), "late"
+    if days == 0:
+        return "vandaag", "soon"
+    if days == 1:
+        return "morgen", "soon"
+    if days <= 30:
+        return f"over {days} d", "later"
+    return short_date(due), "later"

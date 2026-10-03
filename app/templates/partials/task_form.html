@@ -1,0 +1,96 @@
+{% macro invalid(field) %}{% if errors.get(field) %} aria-invalid="true" aria-describedby="{{ field }}-error"{% endif %}{% endmacro %}
+<div id="task-form" class="stack">
+  {% include "partials/messages.html" %}
+  {% if task and task.is_archived %}
+  <p class="alert alert-info" role="status">Deze taak staat in het archief.</p>
+  {% endif %}
+  <form class="card form" hx-post="{{ '/taken/%d' % task.id if task else '/taken' }}" hx-target="#task-form" hx-swap="outerHTML" novalidate>
+    <div class="field">
+      <label class="label" for="name">Naam</label>
+      <input class="input" id="name" name="name" required maxlength="100" value="{{ values.name or '' }}"{{ invalid("name") }}>
+      {% with field="name" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field">
+      <label class="label" for="category_id">Categorie</label>
+      <select class="input" id="category_id" name="category_id"{{ invalid("category_id") }}>
+        {% for c in categories %}
+        <option value="{{ c.id }}"{% if values.category_id == c.id|string %} selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      {% with field="category_id" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <fieldset class="field">
+      <legend class="label">Herhaling</legend>
+      <div class="options">
+        {% for value, label in recurrence_labels.items() %}
+        <label class="option">
+          <input type="radio" name="recurrence_type" value="{{ value.value }}"{% if values.recurrence_type == value.value %} checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% with field="recurrence_type" %}{% include "partials/field_error.html" %}{% endwith %}
+    </fieldset>
+
+    <div class="field interval-field">
+      <label class="label" for="interval_every">Elke</label>
+      <div class="inline-fields">
+        <input class="input input-number" id="interval_every" name="interval_every" type="number" inputmode="numeric" min="1" max="3650" value="{{ values.interval_every or '' }}"{{ invalid("interval_every") }}>
+        <label class="visually-hidden" for="interval_unit">Eenheid</label>
+        <select class="input" id="interval_unit" name="interval_unit">
+          {% for value, label in unit_labels.items() %}
+          <option value="{{ value.value }}"{% if values.interval_unit == value.value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% with field="interval_every" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field">
+      <label class="label" for="next_date">Volgende keer <span class="label-note">(optioneel)</span></label>
+      <input class="input" id="next_date" name="next_date" type="date" value="{{ values.next_date or '' }}"{{ invalid("next_date") }}>
+      <p class="hint">Leeg laten als je het niet weet: de taak verschijnt dan pas na de eerste keer afvinken op Vandaag.</p>
+      {% with field="next_date" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field">
+      <label class="label" for="owner_id">Vaste eigenaar <span class="label-note">(optioneel)</span></label>
+      <select class="input" id="owner_id" name="owner_id"{{ invalid("owner_id") }}>
+        <option value="">Niemand: iedereen mag hem oppakken</option>
+        {% for o in owners %}
+        <option value="{{ o.id }}"{% if values.owner_id == o.id|string %} selected{% endif %}>{{ o.display_name }}</option>
+        {% endfor %}
+      </select>
+      {% with field="owner_id" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field">
+      <label class="label" for="default_points">Punten <span class="label-note">(optioneel)</span></label>
+      <input class="input input-number" id="default_points" name="default_points" type="number" inputmode="numeric" min="1" max="100" value="{{ values.default_points or '' }}"{{ invalid("default_points") }}>
+      {% with field="default_points" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field">
+      <label class="label" for="notes">Notities <span class="label-note">(optioneel)</span></label>
+      <textarea class="input textarea" id="notes" name="notes" rows="3" maxlength="2000"{{ invalid("notes") }}>{{ values.notes or '' }}</textarea>
+      {% with field="notes" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <button class="button" type="submit">{{ "Opslaan" if task else "Taak toevoegen" }}</button>
+  </form>
+
+  {% if task %}
+  <div class="actions">
+    {% if task.is_archived %}
+    <button class="button button-outline" type="button" hx-post="/taken/{{ task.id }}/herstellen">Terugzetten uit archief</button>
+    {% else %}
+    <button class="button button-outline" type="button" hx-post="/taken/{{ task.id }}/archiveren" hx-confirm="{{ task.name }} archiveren?">Archiveren</button>
+    {% endif %}
+    {% if not has_history %}
+    <button class="button button-danger" type="button" hx-post="/taken/{{ task.id }}/verwijderen" hx-target="#task-form" hx-swap="outerHTML" hx-confirm="{{ task.name }} definitief verwijderen?">Verwijderen</button>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

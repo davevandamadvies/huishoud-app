@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  {% with back_href="/taken", back_label="Taken" %}{% include "partials/back_link.html" %}{% endwith %}
+  <h1 class="page-title">{{ task.name if task else "Nieuwe taak" }}</h1>
+</header>
+{% include "partials/task_form.html" %}
+{% endblock %}
