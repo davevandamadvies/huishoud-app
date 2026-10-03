@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
 from enum import StrEnum
 
 from sqlalchemy import (
@@ -10,6 +10,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -111,6 +112,7 @@ class Occurrence(Base):
     )
     due_date: Mapped[date | None] = mapped_column(Date, index=True)
     planned_date: Mapped[date | None] = mapped_column(Date)
+    planned_time: Mapped[time | None] = mapped_column(Time)
     points: Mapped[int | None] = mapped_column(Integer)
     completed_on: Mapped[date | None] = mapped_column(Date)
     completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
@@ -121,6 +123,9 @@ class Occurrence(Base):
     task: Mapped[Task] = relationship()
     performers: Mapped[list["Performer"]] = relationship(
         cascade="all, delete-orphan", order_by="Performer.user_id"
+    )
+    owners: Mapped[list["OccurrenceOwner"]] = relationship(
+        cascade="all, delete-orphan", order_by="OccurrenceOwner.user_id"
     )
 
     @property
@@ -146,5 +151,23 @@ class Performer(Base):
     )
     # Toegekende punten (fase 3); leeg = geen punten
     points: Mapped[int | None] = mapped_column(Integer)
+
+    user: Mapped[User] = relationship()
+
+
+class OccurrenceOwner(Base):
+    """Eigenaar(s) van een geplande uitvoering (0..n): wie het zou doen.
+
+    Los van Performer, die vastlegt wie het daadwerkelijk heeft gedaan.
+    """
+
+    __tablename__ = "occurrence_owners"
+
+    occurrence_id: Mapped[int] = mapped_column(
+        ForeignKey("occurrences.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), primary_key=True, index=True
+    )
 
     user: Mapped[User] = relationship()
