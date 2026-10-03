@@ -6,8 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "alembic",
+    "authlib>=1.8",
     "fastapi",
+    "httpx>=0.28",
     "jinja2",
+    "joserfc>=1.6.1",
     "pydantic-settings",
     "sqlalchemy",
     "uvicorn",
@@ -15,7 +18,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx",
     "pytest",
     "ruff",
 ]

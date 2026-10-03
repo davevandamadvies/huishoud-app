@@ -16,6 +16,6 @@
   <main id="inhoud" class="page">
     {% block content %}{% endblock %}
   </main>
-  {% include "partials/bottom_nav.html" %}
+  {% if not hide_nav %}{% include "partials/bottom_nav.html" %}{% endif %}
 </body>
 </html>

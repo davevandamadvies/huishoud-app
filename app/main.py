@@ -1,21 +1,32 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-from app import pages
+from app import auth, pages
 from app.bootstrap import run_bootstrap
 from app.db import new_session
-from app.security import SecurityHeadersMiddleware
+from app.oidc import OIDCNotConfigured
+from app.security import CSRFMiddleware, SecurityHeadersMiddleware
 from app.settings import get_settings
 from app.templating import STATIC_DIR
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    settings = get_settings()
+    missing = settings.missing_auth_settings()
+    if missing:
+        # Niet crashen: de app blijft dicht (inloggen meldt dat het niet is
+        # ingesteld) en /healthz blijft werken.
+        logger.error("Inloggen is niet ingesteld; ontbrekend: %s", ", ".join(missing))
     with new_session() as db:
-        run_bootstrap(db, get_settings())
+        run_bootstrap(db, settings)
     yield
 
 
@@ -29,12 +40,22 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json" if docs_enabled else None,
         lifespan=lifespan,
     )
+    app.add_middleware(CSRFMiddleware, expected_origin=lambda: get_settings().base_url)
     app.add_middleware(
         SecurityHeadersMiddleware,
         csp_exempt_paths=("/docs", "/redoc") if docs_enabled else (),
     )
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.include_router(auth.router)
     app.include_router(pages.router)
+
+    @app.exception_handler(auth.NotAuthenticated)
+    def _not_authenticated(request: Request, _exc: Exception) -> Response:
+        return auth.not_authenticated_response(request)
+
+    @app.exception_handler(OIDCNotConfigured)
+    def _oidc_not_configured(request: Request, exc: Exception) -> Response:
+        return auth.not_configured_response(request, exc)
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:

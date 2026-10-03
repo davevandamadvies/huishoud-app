@@ -55,6 +55,18 @@ voor het lokale certificaat van Caddy).
 | `INITIAL_ADMIN_SUB` | – | `sub` van het Authelia-account dat bij de eerste start beheerder wordt (alleen zolang er geen beheerder is) |
 | `INITIAL_ADMIN_NAME` | `Beheerder` | Weergavenaam van die eerste beheerder |
 | `SESSION_MAX_AGE_DAYS` | `90` | Levensduur van een sessie; schuift mee bij gebruik |
+| `BASE_URL` | – | Publieke URL van de app, bijv. `https://huishoud.example.com` (redirect-URI en Origin-controle) |
+| `OIDC_ISSUER` | – | Issuer-URL van Authelia, bijv. `https://auth.example.com` |
+| `OIDC_CLIENT_ID` | – | Client-ID van de app in Authelia |
+| `OIDC_CLIENT_SECRET` | – | Client-secret (geheim, alleen in `.env`) |
+| `OIDC_SCOPES` | `openid profile` | Gevraagde scopes |
+
+Ontbreken `BASE_URL` of `OIDC_*`, dan start de app wel (healthcheck werkt), maar
+blijft hij dicht: inloggen toont "Inloggen is nog niet ingesteld".
+
+Wie bij Authelia kan inloggen maar niet als gebruiker in de app bekend is, krijgt
+"Geen toegang" met zijn account-ID (`sub`). Dat ID gebruik je voor
+`INITIAL_ADMIN_SUB` of bij "Toegang geven".
 
 Geheimen krijgen nooit een standaardwaarde en horen in `.env` (niet in git).
 Zie `.env.example`.

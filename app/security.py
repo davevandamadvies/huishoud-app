@@ -1,5 +1,9 @@
 """Beveiligingsheaders voor elk antwoord."""
 
+from collections.abc import Callable
+
+from starlette.datastructures import Headers
+from starlette.responses import PlainTextResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 CONTENT_SECURITY_POLICY = "; ".join(
@@ -57,3 +61,35 @@ class SecurityHeadersMiddleware:
             await send(message)
 
         await self.app(scope, receive, send_with_headers)
+
+
+SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
+
+class CSRFMiddleware:
+    """Weigert wijzigende verzoeken die niet van de app zelf komen.
+
+    Vereist bij POST/PUT/PATCH/DELETE een Origin-header gelijk aan de eigen
+    origin én de header `HX-Request: true` (die een andere site niet zonder
+    CORS-toestemming kan meesturen). Aanvulling op SameSite-cookies.
+    """
+
+    def __init__(self, app: ASGIApp, expected_origin: Callable[[], str | None]) -> None:
+        self.app = app
+        self.expected_origin = expected_origin
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope["method"] in SAFE_METHODS:
+            await self.app(scope, receive, send)
+            return
+        headers = Headers(scope=scope)
+        expected = self.expected_origin() or _origin_from_host(scope, headers)
+        if headers.get("origin") != expected or headers.get("hx-request") != "true":
+            response = PlainTextResponse("Verzoek geweigerd (CSRF).", status_code=403)
+            await response(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+
+def _origin_from_host(scope: Scope, headers: Headers) -> str:
+    return f"{scope.get('scheme', 'http')}://{headers.get('host', '')}"

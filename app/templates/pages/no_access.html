@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  <h1 class="page-title">Geen toegang</h1>
+</header>
+<div class="card">
+  <p>Je bent ingelogd, maar je account heeft (nog) geen toegang tot deze app.</p>
+  <p>Vraag de beheerder om je toegang te geven en geef daarbij dit account-ID door:</p>
+  <p><code class="code-block">{{ sub }}</code></p>
+</div>
+{% endblock %}
