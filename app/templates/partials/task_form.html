@@ -93,12 +93,16 @@
       {% with field="owner_id" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
+    {% if request.state.competition %}
     <div class="field">
       <label class="label" for="default_points">Punten <span class="label-note">(optioneel)</span></label>
       <input class="input input-number" id="default_points" name="default_points" type="number" inputmode="numeric" min="1" max="100" value="{{ values.default_points or '' }}"{{ invalid("default_points") }}>
       {% with field="default_points" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
+    {% elif values.default_points %}
+    <input type="hidden" name="default_points" value="{{ values.default_points }}">
+    {% endif %}
     <div class="field">
       <label class="label" for="notes">Notities <span class="label-note">(optioneel)</span></label>
       <textarea class="input textarea" id="notes" name="notes" rows="3" maxlength="2000"{{ invalid("notes") }}>{{ values.notes or '' }}</textarea>

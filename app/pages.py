@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from app import categories, planning, today_view
+from app import categories, planning, settings_store, today_view
 from app.auth import CurrentUser, current_user
 from app.dates import due_label, plan_label, today
 from app.db import get_db
@@ -61,7 +61,25 @@ def _placeholder(key: str, title: str):
     return page
 
 
-router.add_api_route("/scores", _placeholder("scores", "Scores"), methods=["GET"])
+@router.get("/scores")
+def scores_page(request: Request, user: CurrentUser) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request,
+        "pages/scores.html",
+        {"user": user, "page_title": "Scores", "active_nav": "scores"},
+    )
+
+
+@router.post("/instellingen/competitie")
+def toggle_competition(request: Request, user: CurrentUser, db: DB) -> HTMLResponse:
+    enabled = not settings_store.competition_enabled(db)
+    settings_store.set_value(
+        db, user, settings_store.COMPETITION, "true" if enabled else "false"
+    )
+    request.state.competition = enabled
+    return templates.TemplateResponse(
+        request, "partials/competition_switch.html", {"user": user}
+    )
 
 
 @router.get("/meer")
