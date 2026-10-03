@@ -39,6 +39,7 @@ class TaskInput:
     default_points: int | None
     notes: str | None
     next_date: date | None
+    first_reminder_days: int | None = None
 
     def audit_dict(self) -> dict:
         return {
@@ -50,6 +51,7 @@ class TaskInput:
             "owner_id": self.owner_id,
             "default_points": self.default_points,
             "notes": self.notes,
+            "first_reminder_days": self.first_reminder_days,
         }
 
 
@@ -116,6 +118,15 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         if points is None or not 1 <= points <= 100:
             errors["default_points"] = "Punten: een heel getal van 1 tot 100, of leeg."
 
+    first_reminder: int | None = None
+    raw_first = form.get_str("first_reminder_days")
+    if recurrence == RecurrenceType.FIXED_DATE and raw_first:
+        first_reminder = _int(raw_first)
+        if first_reminder is None or not 1 <= first_reminder <= 365:
+            errors["first_reminder_days"] = (
+                "Eerste herinnering: een heel getal van 1 tot 365 dagen, of leeg."
+            )
+
     notes = form.get_str("notes") or None
     if notes and len(notes) > 2000:
         errors["notes"] = "Notities mogen maximaal 2000 tekens zijn."
@@ -140,6 +151,7 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         default_points=points,
         notes=notes,
         next_date=next_date,
+        first_reminder_days=first_reminder,
     )
 
 
@@ -209,6 +221,7 @@ def _apply(task: Task, data: TaskInput) -> None:
     task.owner_id = data.owner_id
     task.default_points = data.default_points
     task.notes = data.notes
+    task.first_reminder_days = data.first_reminder_days
 
 
 def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
@@ -320,6 +333,7 @@ def _audit_snapshot(task: Task, next_date: date | None) -> dict:
         "owner_id": task.owner_id,
         "default_points": task.default_points,
         "notes": task.notes,
+        "first_reminder_days": task.first_reminder_days,
         "next_date": _iso(next_date),
     }
 

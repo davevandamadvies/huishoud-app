@@ -75,6 +75,16 @@
       {% with field="interval_every" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
+    <div class="field first-reminder-field">
+      <label class="label" for="first_reminder_days">Eerste herinnering <span class="label-note">(optioneel)</span></label>
+      <div class="inline-fields">
+        <input class="input input-number" id="first_reminder_days" name="first_reminder_days" type="number" inputmode="numeric" min="1" max="365" value="{{ values.first_reminder_days or '' }}"{{ invalid("first_reminder_days") }}>
+        <span>dagen vooraf</span>
+      </div>
+      <p class="hint">Bijvoorbeeld 60 voor de APK: je krijgt dan vanaf twee maanden vooraf een herinnering.</p>
+      {% with field="first_reminder_days" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
     <div class="field">
       <label class="label" for="next_date">Volgende keer <span class="label-note">(optioneel)</span></label>
       <input class="input" id="next_date" name="next_date" type="date" value="{{ values.next_date or '' }}"{{ invalid("next_date") }}>

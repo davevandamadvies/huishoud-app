@@ -14,6 +14,7 @@ from app import (
     planning_pages,
     push_pages,
     pwa,
+    reminder_pages,
     task_pages,
 )
 from app.bootstrap import run_bootstrap
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(task_pages.router)
     app.include_router(planning_pages.router)
     app.include_router(push_pages.router)
+    app.include_router(reminder_pages.router)
 
     @app.exception_handler(auth.NotAuthenticated)
     def _not_authenticated(request: Request, _exc: Exception) -> Response:

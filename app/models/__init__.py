@@ -3,6 +3,7 @@
 from app.models.audit import AuditLog
 from app.models.category import Category
 from app.models.push import PushSubscription
+from app.models.reminder import ReminderMutedCategory, ReminderPreference
 from app.models.setting import Setting
 from app.models.task import (
     Occurrence,
@@ -21,6 +22,8 @@ __all__ = [
     "OccurrenceStatus",
     "Performer",
     "PushSubscription",
+    "ReminderMutedCategory",
+    "ReminderPreference",
     "Setting",
     "Task",
     "Role",

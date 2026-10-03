@@ -63,6 +63,8 @@ class Task(Base):
         ForeignKey("users.id", ondelete="SET NULL")
     )
     default_points: Mapped[int | None] = mapped_column(Integer)
+    # Alleen bij een vaste datum: eerste herinnering zoveel dagen vooraf.
+    first_reminder_days: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(Text)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

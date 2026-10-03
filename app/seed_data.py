@@ -21,6 +21,7 @@ class SeedTask:
     winter_every: int | None = None  # interval in de winter, nov–feb (fase 6)
     km: int | None = None  # of-kilometers (fase 5)
     notes: str | None = None
+    first_reminder_days: int | None = None  # alleen bij een vaste datum
 
 
 def months(first: int, last: int) -> tuple[int, ...]:
@@ -87,6 +88,7 @@ TASKS: tuple[SeedTask, ...] = (
         points=5,
         recurrence="fixed_date",
         notes="Vaste datum; reminder vanaf 2 maanden vooraf.",
+        first_reminder_days=60,
     ),
     SeedTask(A, "Auto wassen", 30, points=4),
     SeedTask(A, "Interieur stofzuigen", 30, points=3),

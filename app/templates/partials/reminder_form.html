@@ -1,0 +1,131 @@
+{% macro invalid(field) %}{% if errors.get(field) %} aria-invalid="true" aria-describedby="{{ field }}-error"{% endif %}{% endmacro %}
+<div id="reminder-form" class="stack">
+  {% include "partials/messages.html" %}
+  <form class="card form" hx-post="/reminders/{{ slug }}" hx-target="#reminder-form" hx-swap="outerHTML" novalidate>
+    {% if slug == "update" %}
+    <p class="hint">Een update vertelt hoeveel taken eraan komen, wat achterloopt, en hoe goed het huishouden bij is.</p>
+    <label class="option">
+      <input type="checkbox" name="update_enabled" value="1"{% if v.update_enabled %} checked{% endif %}>
+      <span>Update ontvangen</span>
+    </label>
+
+    <fieldset class="field">
+      <legend class="label">Hoe vaak</legend>
+      <div class="options">
+        {% for key, (label, _preset) in frequencies.items() %}
+        <label class="option">
+          <input type="radio" name="frequency" value="{{ key }}"{% if v.frequency == key %} checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="day-picker" role="group" aria-label="Eigen dagen">
+        {% for name in day_names %}
+        <label class="day-chip">
+          <input type="checkbox" name="day" value="{{ loop.index0 }}"{% if loop.index0|string in v.days %} checked{% endif %}>
+          <span>{{ name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% with field="frequency" %}{% include "partials/field_error.html" %}{% endwith %}
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Hoe laat <span class="label-note">(1 tot 3 tijdstippen)</span></legend>
+      <div class="time-fields">
+        {% for t in v.times %}
+        <label class="visually-hidden" for="time-{{ loop.index }}">Tijdstip {{ loop.index }}</label>
+        <input class="input input-time" id="time-{{ loop.index }}" name="time" type="time" value="{{ t }}"{{ invalid("time") }}>
+        {% endfor %}
+      </div>
+      {% with field="time" %}{% include "partials/field_error.html" %}{% endwith %}
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Vooruitkijken</legend>
+      <div class="options">
+        {% for value, label in lookahead_choices.items() %}
+        <label class="option">
+          <input type="radio" name="lookahead_days" value="{{ value }}"{% if v.lookahead_days == value %} checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% with field="lookahead_days" %}{% include "partials/field_error.html" %}{% endwith %}
+    </fieldset>
+
+    <fieldset class="field">
+      <legend class="label">Welke taken</legend>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="scope" value="household"{% if v.scope != "mine" %} checked{% endif %}>
+          <span>Het hele huishouden (met wat voor jou is)</span>
+        </label>
+        <label class="option">
+          <input type="radio" name="scope" value="mine"{% if v.scope == "mine" %} checked{% endif %}>
+          <span>Alleen mijn taken</span>
+        </label>
+      </div>
+    </fieldset>
+
+    {% elif slug == "taken" %}
+    <p class="hint">Losse meldingen gaan over één taak, naar wie hem gepland heeft of de vaste eigenaar (anders naar iedereen). Ze komen op je eerste update-tijdstip.</p>
+    <label class="option">
+      <input type="checkbox" name="task_on_day" value="1"{% if v.task_on_day %} checked{% endif %}>
+      <span>Op de dag zelf</span>
+    </label>
+    <fieldset class="field">
+      <legend class="label">Van tevoren</legend>
+      <div class="options">
+        {% for value, label in days_before_choices.items() %}
+        <label class="option">
+          <input type="radio" name="task_days_before" value="{{ value }}"{% if v.task_days_before == value %} checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% with field="task_days_before" %}{% include "partials/field_error.html" %}{% endwith %}
+    </fieldset>
+    <label class="option">
+      <input type="checkbox" name="task_late_daily" value="1"{% if v.task_late_daily %} checked{% endif %}>
+      <span>Bij te laat: dagelijks blijven melden</span>
+    </label>
+    <p class="hint">Bij taken met een vaste datum (zoals de APK) stel je bij de taak zelf in vanaf wanneer je een herinnering krijgt.</p>
+
+    {% elif slug == "stille-uren" %}
+    <p class="hint">Binnen de stille uren komt er niets binnen. Een melding schuift dan door naar het einde van de stille uren.</p>
+    <label class="option">
+      <input type="checkbox" name="quiet_enabled" value="1"{% if v.quiet_enabled %} checked{% endif %}>
+      <span>Stille uren aan</span>
+    </label>
+    <div class="inline-fields">
+      <div class="field">
+        <label class="label" for="quiet_start">Van</label>
+        <input class="input input-time" id="quiet_start" name="quiet_start" type="time" value="{{ v.quiet_start }}"{{ invalid("quiet_start") }}>
+        {% with field="quiet_start" %}{% include "partials/field_error.html" %}{% endwith %}
+      </div>
+      <div class="field">
+        <label class="label" for="quiet_end">Tot</label>
+        <input class="input input-time" id="quiet_end" name="quiet_end" type="time" value="{{ v.quiet_end }}"{{ invalid("quiet_end") }}>
+        {% with field="quiet_end" %}{% include "partials/field_error.html" %}{% endwith %}
+      </div>
+    </div>
+
+    {% elif slug == "categorieen" %}
+    <fieldset class="field">
+      <legend class="label">Herinneringen voor</legend>
+      <div class="options">
+        {% for c in categories %}
+        <label class="option">
+          <input type="checkbox" name="category" value="{{ c.id }}"{% if c.id not in v.muted %} checked{% endif %}>
+          <span class="dot cat-{{ c.color }}" aria-hidden="true"></span>
+          <span>{{ c.name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% endif %}
+
+    <button class="button" type="submit">Opslaan</button>
+  </form>
+</div>
