@@ -21,4 +21,6 @@
       {% endif %}
     </div>
   </a>
+  {% set pts = occ.points if occ.points is not none else task.default_points %}
+  {% if request.state.competition and pts %}<span class="item-end">{{ pts }} p</span>{% endif %}
 </li>

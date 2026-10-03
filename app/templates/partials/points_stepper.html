@@ -1,0 +1,9 @@
+<div class="field" data-stepper>
+  <label class="label" for="points">Punten <span class="label-note">(optioneel)</span></label>
+  <div class="stepper">
+    <button class="step" type="button" data-step="-1" aria-label="Minder punten">−</button>
+    <input class="input stepper-value" id="points" name="points" type="number" inputmode="numeric" min="1" max="100" value="{{ points if points else '' }}" placeholder="–">
+    <button class="step" type="button" data-step="1" aria-label="Meer punten">+</button>
+    <span class="stepper-note" data-share aria-live="polite"></span>
+  </div>
+</div>

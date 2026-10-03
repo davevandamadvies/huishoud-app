@@ -8,12 +8,13 @@ from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import categories, completion, planning, tasks
+from app import categories, completion, planning, settings_store, tasks
+from app import points as app_points
 from app.auth import CurrentUser, current_user
 from app.dates import due_label, dutch_date, plan_label, today
 from app.db import get_db
 from app.forms import Form, FormData
-from app.models import OccurrenceStatus, Role, Task, User, UserStatus
+from app.models import Occurrence, OccurrenceStatus, Role, Task, User, UserStatus
 from app.recurrence import IntervalUnit, RecurrenceType, describe
 from app.templating import templates
 
@@ -250,6 +251,7 @@ def _sheet(
     note: str = "",
     after: str = "event",
     error: str | None = None,
+    points: int | None = None,
 ) -> HTMLResponse:
     context = _context(
         db,
@@ -263,6 +265,7 @@ def _sheet(
         error=error,
         preview=completion.preview_next(db, task, completed_on),
         max_days_back=completion.MAX_DAYS_BACK,
+        points=points,
     )
     return templates.TemplateResponse(request, "partials/complete_sheet.html", context)
 
@@ -281,6 +284,7 @@ def complete_sheet(
         task,
         selected=owners or [user.id],
         completed_on=today(),
+        points=completion.default_points(db, task),
         after="refresh" if na == "refresh" else "event",
     )
 
@@ -308,6 +312,8 @@ def complete(
     task = _get(db, task_id)
     performer_ids = [int(v) for v in form.get_all("performer") if v.isdigit()]
     note = form.get_str("note")
+    raw_points = form.get_str("points")
+    points = int(raw_points) if raw_points.isdigit() else None
     after = "refresh" if form.get_str("after") == "refresh" else "event"
     try:
         completed_on = date.fromisoformat(form.get_str("completed_on"))
@@ -321,6 +327,7 @@ def complete(
             performer_ids=performer_ids,
             completed_on=completed_on,
             note=note,
+            points=points,
         )
     except completion.CompletionError as exc:
         db.rollback()
@@ -334,6 +341,7 @@ def complete(
             note=note,
             after=after,
             error=str(exc),
+            points=points,
         )
     return _changed(after)
 
@@ -399,6 +407,7 @@ def plan_sheet(
             if pending.planned_time
             else "",
             "owners": [o.user_id for o in pending.owners],
+            "points": pending.points,
         }
     else:
         try:
@@ -409,6 +418,7 @@ def plan_sheet(
             "planned_date": day.isoformat(),
             "planned_time": "",
             "owners": [task.owner_id] if task.owner_id else [],
+            "points": task.default_points,
         }
     return _plan_sheet(request, db, user, task, values=values, after=_after(na))
 
@@ -424,7 +434,9 @@ def _parse_plan(form: FormData) -> planning.PlanInput:
     except ValueError as exc:
         raise planning.PlanningError("Vul een geldige tijd in.") from exc
     owners = tuple(int(v) for v in form.get_all("owner") if v.isdigit())
-    return planning.PlanInput(planned_date, planned_time, owners)
+    raw_points = form.get_str("points")
+    points = int(raw_points) if raw_points.isdigit() else None
+    return planning.PlanInput(planned_date, planned_time, owners, points)
 
 
 @router.post("/{task_id}/inplannen")
@@ -433,23 +445,26 @@ def plan(
 ) -> Response:
     task = _get(db, task_id)
     after = _after(form.get_str("after"))
+    competition = settings_store.competition_enabled(db)
     try:
         data = _parse_plan(form)
         pending = tasks.pending_occurrence(db, task)
-        if pending is not None and pending.status == OccurrenceStatus.PLANNED:
-            # Bij verzetten blijven de punten van deze keer staan.
+        if not competition and pending is not None:
+            # Zonder competitie is er geen puntenveld: punten blijven zoals ze waren.
             data = planning.PlanInput(
                 data.planned_date, data.planned_time, data.owner_ids, pending.points
             )
+        if pending is not None and pending.status == OccurrenceStatus.PLANNED:
             planning.reschedule(db, user, pending, data)
         else:
-            planning.plan(db, user, task, data)
+            planning.plan(db, user, task, data, use_task_points=not competition)
     except planning.PlanningError as exc:
         db.rollback()
         values = {
             "planned_date": form.get_str("planned_date"),
             "planned_time": form.get_str("planned_time"),
             "owners": [int(v) for v in form.get_all("owner") if v.isdigit()],
+            "points": form.get_str("points"),
         }
         return _plan_sheet(
             request, db, user, task, values=values, after=after, error=str(exc)
@@ -472,3 +487,22 @@ def cancel_plan(
         db.rollback()
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _changed(after)
+
+
+@router.post("/{task_id}/logboek/{occurrence_id}/punten")
+def correct_points(
+    task_id: int, occurrence_id: int, user: CurrentUser, db: DB, form: Form
+) -> Response:
+    occurrence = db.get(Occurrence, occurrence_id)
+    if occurrence is None or occurrence.task_id != task_id:
+        raise HTTPException(status_code=404)
+    if not settings_store.competition_enabled(db):
+        raise HTTPException(status_code=409, detail="De competitie staat uit.")
+    raw_points = form.get_str("points")
+    points = int(raw_points) if raw_points.isdigit() else None
+    try:
+        app_points.correct(db, user, occurrence, points, form.get_str("reason"))
+    except app_points.PointsError as exc:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return Response(status_code=204, headers={"HX-Refresh": "true"})

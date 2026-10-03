@@ -26,6 +26,8 @@
       </div>
     </fieldset>
 
+    {% if request.state.competition %}{% include "partials/points_stepper.html" %}{% endif %}
+
     <div class="field">
       <label class="label" for="completed_on">Wanneer</label>
       <input class="input" id="completed_on" name="completed_on" type="date" value="{{ completed_on.isoformat() }}" max="{{ today.isoformat() }}"
