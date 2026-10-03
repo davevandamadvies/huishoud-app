@@ -25,6 +25,27 @@ uv run alembic revision --autogenerate -m "korte omschrijving"
 uv run alembic upgrade head && uv run alembic check
 ```
 
+## Lokaal ontwikkelen met inloggen (Authelia)
+
+Voor het echte inlogproces draait er lokaal een volledige omgeving in Docker:
+de app, [Authelia](https://www.authelia.com/) als identity provider (OIDC) en
+Caddy voor HTTPS (Authelia werkt alleen via HTTPS).
+
+```sh
+./dev/setup.sh                                  # eenmalig: geheimen + testaccounts
+docker compose -f compose.dev.yml up --build
+```
+
+Open daarna <https://huishoud.localhost:8443> (de browser waarschuwt eenmalig
+voor het lokale certificaat van Caddy).
+
+- Testaccounts: `dave` (wordt beheerder) en `partner`, wachtwoord `huishoud-dev`.
+- Alle geheimen staan in `dev/.secrets/` (in `.gitignore`); `./dev/setup.sh --reset`
+  begint helemaal opnieuw.
+- Deze configuratie is alleen voor ontwikkeling: 1-factor, testgeheimen,
+  meldingen naar een bestand. Gebruik hem nooit voor productie.
+- De automatische tests hebben deze omgeving niet nodig.
+
 ## Configuratie (omgevingsvariabelen)
 
 | Variabele | Standaard | Betekenis |

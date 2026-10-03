@@ -1,0 +1,57 @@
+# Lokale ontwikkelomgeving: app + Authelia (OIDC) + Caddy (HTTPS).
+# Eenmalig: ./dev/setup.sh  — daarna: docker compose -f compose.dev.yml up --build
+# Open https://huishoud.localhost:8443 (testaccounts: zie README).
+name: huishoud-dev
+
+services:
+  app:
+    build: .
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: sqlite:////data/huishoud.db
+      # Alleen Caddy kan de app bereiken (geen poort naar de host).
+      FORWARDED_ALLOW_IPS: "*"
+      # Vertrouw Caddy's lokale CA voor verbindingen naar Authelia.
+      SSL_CERT_FILE: /caddy-data/caddy/pki/authorities/local/root.crt
+    env_file:
+      - dev/.secrets/app.env
+    volumes:
+      - app-data:/data
+      - caddy-data:/caddy-data:ro
+    depends_on:
+      authelia:
+        condition: service_healthy
+      caddy:
+        condition: service_started
+
+  authelia:
+    image: authelia/authelia:4.39@sha256:bd97cff4fcbf715b5ff1f9ae286afbe6033afce385302520b0368122d43a6f54
+    environment:
+      X_AUTHELIA_CONFIG_FILTERS: template
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /secrets/jwt_secret
+      AUTHELIA_SESSION_SECRET_FILE: /secrets/session_secret
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /secrets/storage_encryption_key
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /secrets/oidc_hmac_secret
+    volumes:
+      - ./dev/authelia/configuration.yml:/config/configuration.yml:ro
+      - ./dev/.secrets:/secrets:ro
+      - authelia-data:/data
+
+  caddy:
+    image: caddy:2-alpine@sha256:881bbc60f9986d5ab8e7cfd6cf7e4ef3c9c0439fef2429d035d065577882f028
+    ports:
+      - "127.0.0.1:8443:8443"
+    volumes:
+      - ./dev/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    networks:
+      default:
+        aliases:
+          # Zelfde namen als in de browser, zodat de app Authelia via Caddy bereikt.
+          - huishoud.localhost
+          - auth.huishoud.localhost
+
+volumes:
+  app-data:
+  authelia-data:
+  caddy-data:
