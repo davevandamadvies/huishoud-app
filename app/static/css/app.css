@@ -625,6 +625,103 @@ li + li > .list-link {
   border-radius: var(--radius-pill);
 }
 
+/* ---- Categoriekleuren (zie app/palette.py) ---- */
+
+.cat-blue {
+  background: #4c7dd8;
+}
+
+.cat-sky {
+  background: #3f8fb5;
+}
+
+.cat-teal {
+  background: #2e9c8f;
+}
+
+.cat-green {
+  background: #3e9b5f;
+}
+
+.cat-olive {
+  background: #7d8b2e;
+}
+
+.cat-orange {
+  background: #b8771f;
+}
+
+.cat-red {
+  background: #c8503c;
+}
+
+.cat-pink {
+  background: #c2577f;
+}
+
+.cat-purple {
+  background: #8a6bd1;
+}
+
+.cat-brown {
+  background: #8b6a4f;
+}
+
+.cat-slate {
+  background: #5e6b7a;
+}
+
+/* ---- Kleurkeuze ---- */
+
+.color-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  cursor: pointer;
+}
+
+.swatch input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.swatch-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.swatch input:checked + .swatch-dot {
+  box-shadow: 0 0 0 3px var(--color-surface), 0 0 0 5px var(--color-text);
+}
+
+.swatch input:focus-visible + .swatch-dot {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+
+.chevron-tight {
+  margin-left: var(--space-2);
+}
+
 /* ---- Navigatie onderaan ---- */
 
 .bottom-nav {

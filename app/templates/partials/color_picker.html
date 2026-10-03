@@ -1,0 +1,12 @@
+<fieldset class="field color-picker">
+  <legend class="label">Kleur</legend>
+  <div class="swatches">
+    {% for key, (label, _hex) in colors.items() %}
+    <label class="swatch">
+      <input type="radio" name="color" value="{{ key }}"{% if form.color == key %} checked{% endif %}>
+      <span class="swatch-dot cat-{{ key }}" aria-hidden="true"></span>
+      <span class="visually-hidden">{{ label }}</span>
+    </label>
+    {% endfor %}
+  </div>
+</fieldset>

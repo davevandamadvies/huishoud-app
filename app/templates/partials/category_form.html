@@ -1,0 +1,12 @@
+<div id="category-form" class="stack">
+  {% include "partials/messages.html" %}
+  <form class="card form" hx-post="/categorieen/{{ category.id }}" hx-target="#category-form" hx-swap="outerHTML">
+    <div class="field">
+      <label class="label" for="name">Naam</label>
+      <input class="input" id="name" name="name" required maxlength="40" value="{{ form.name or '' }}">
+    </div>
+    {% include "partials/color_picker.html" %}
+    <button class="button" type="submit">Opslaan</button>
+  </form>
+  <button class="button button-danger" type="button" hx-post="/categorieen/{{ category.id }}/verwijderen" hx-target="#category-form" hx-swap="outerHTML" hx-confirm="Categorie {{ category.name }} verwijderen?">Verwijderen</button>
+</div>

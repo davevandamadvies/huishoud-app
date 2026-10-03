@@ -50,3 +50,12 @@ def contrast(fg: str, bg: str) -> float:
 )
 def test_text_contrast(fg: str, bg: str) -> None:
     assert contrast(TOKENS[fg], TOKENS[bg]) >= 4.5
+
+
+def test_category_palette_has_css_and_contrast() -> None:
+    from app.palette import CATEGORY_COLORS
+
+    for key, (_label, hex_color) in CATEGORY_COLORS.items():
+        assert f".cat-{key} {{\n  background: {hex_color};" in CSS, key
+        # Niet-tekstelement (bolletje): minimaal 3:1 op wit
+        assert contrast(hex_color, TOKENS["color-surface"]) >= 3, key
