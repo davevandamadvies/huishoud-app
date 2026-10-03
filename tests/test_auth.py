@@ -235,7 +235,12 @@ def test_logged_out_page(anon_client: TestClient) -> None:
     ("target", "expected"),
     [
         ("/taken", "/taken"),
-        ("/taken?x=1", "/taken?x=1"),
+        ("/taken?x=1", "/taken"),
+        ("/taken/12", "/taken/12"),
+        ("/beheer/gebruikers/3", "/beheer/gebruikers/3"),
+        ("/taken/12/afronden", "/"),
+        ("/taken/abc", "/"),
+        ("/onbekend", "/"),
         ("https://evil.example", "/"),
         ("//evil.example", "/"),
         ("/\\evil.example", "/"),
