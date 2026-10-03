@@ -1,0 +1,69 @@
+# Authelia — ALLEEN voor lokale ontwikkeling.
+# Geheimen komen uit dev/.secrets (aangemaakt door dev/setup.sh, niet in git).
+# Productie-inrichting staat los hiervan (zie README, sectie Productie).
+
+theme: auto
+
+server:
+  address: "tcp://:9091"
+
+log:
+  level: info
+
+totp:
+  issuer: huishoud.localhost
+
+webauthn:
+  display_name: Huishoud (dev)
+
+authentication_backend:
+  file:
+    path: /secrets/users.yml
+    watch: false
+    password:
+      algorithm: argon2
+
+access_control:
+  default_policy: one_factor
+
+session:
+  cookies:
+    - domain: huishoud.localhost
+      authelia_url: "https://auth.huishoud.localhost:8443"
+
+regulation:
+  max_retries: 5
+  find_time: 2m
+  ban_time: 5m
+
+storage:
+  local:
+    path: /data/db.sqlite3
+
+notifier:
+  filesystem:
+    filename: /data/notifications.txt
+
+identity_providers:
+  oidc:
+    jwks:
+      - key_id: huishoud-dev
+        algorithm: RS256
+        use: sig
+        key: {{ secret "/secrets/oidc_jwk.pem" | mindent 10 "|" | msquote }}
+    clients:
+      - client_id: huishoud-dev
+        client_name: Huishoud (dev)
+        client_secret: '{{ secret "/secrets/oidc_client_secret.digest" }}'
+        public: false
+        authorization_policy: one_factor
+        consent_mode: implicit
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - "https://huishoud.localhost:8443/auth/callback"
+        scopes: [openid, profile, email]
+        response_types: [code]
+        grant_types: [authorization_code]
+        token_endpoint_auth_method: client_secret_basic
+        id_token_signed_response_alg: RS256

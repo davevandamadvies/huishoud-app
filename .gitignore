@@ -22,3 +22,6 @@ Thumbs.db
 .venv/
 __pycache__/
 requirements-audit.txt
+
+# Lokale ontwikkelomgeving (geheimen, gegenereerd door dev/setup.sh)
+dev/.secrets/

@@ -1,0 +1,14 @@
+# Reverse proxy voor lokale ontwikkeling, met Caddy's eigen (lokale) CA.
+{
+	local_certs
+	skip_install_trust
+	admin off
+}
+
+https://huishoud.localhost:8443 {
+	reverse_proxy app:8000
+}
+
+https://auth.huishoud.localhost:8443 {
+	reverse_proxy authelia:9091
+}
