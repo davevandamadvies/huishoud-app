@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -21,6 +21,31 @@ class Settings(BaseSettings):
 
     # Levensduur van een sessie; schuift mee bij gebruik.
     session_max_age_days: int = Field(default=90, ge=1, le=400)
+
+    # Publieke URL van de app (bron voor de redirect-URI en de Origin-check),
+    # bijv. https://huishoud.example.com
+    base_url: str | None = None
+
+    # Inloggen via OpenID Connect (Authelia). Geen standaardwaarden.
+    oidc_issuer: str | None = None
+    oidc_client_id: str | None = None
+    oidc_client_secret: SecretStr | None = None
+    oidc_scopes: str = "openid profile"
+
+    @field_validator("base_url", "oidc_issuer")
+    @classmethod
+    def _strip_trailing_slash(cls, value: str | None) -> str | None:
+        return value.rstrip("/") if value else value
+
+    def missing_auth_settings(self) -> list[str]:
+        """Namen van ontbrekende instellingen die nodig zijn voor inloggen."""
+        required = {
+            "BASE_URL": self.base_url,
+            "OIDC_ISSUER": self.oidc_issuer,
+            "OIDC_CLIENT_ID": self.oidc_client_id,
+            "OIDC_CLIENT_SECRET": self.oidc_client_secret,
+        }
+        return [name for name, value in required.items() if not value]
 
 
 @lru_cache

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  <h1 class="page-title">Instellingen</h1>
+</header>
+
+<section>
+  <h2 class="section-title">Account</h2>
+  <ul class="list">
+    <li class="list-item">
+      <span class="avatar avatar-{{ user.avatar_color }}" aria-hidden="true">{{ user.initial }}</span>
+      <div>
+        <div class="item-title">{{ user.display_name }}</div>
+        <div class="item-meta">{{ "Beheerder" if user.is_admin else "Gebruiker" }}</div>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<button class="button button-outline" type="button" hx-post="/auth/logout">Uitloggen</button>
+{% endblock %}

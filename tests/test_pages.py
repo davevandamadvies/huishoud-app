@@ -6,12 +6,11 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.dates import dutch_date
-from app.main import app, create_app
+from app.main import create_app
 from app.settings import get_settings
-
-client = TestClient(app)
 
 STATIC = Path(__file__).resolve().parent.parent / "app" / "static"
 
@@ -26,7 +25,9 @@ STATIC = Path(__file__).resolve().parent.parent / "app" / "static"
         ("/meer", "Instellingen", "/meer"),
     ],
 )
-def test_pages_render_with_navigation(path: str, title: str, active: str) -> None:
+def test_pages_render_with_navigation(
+    client: TestClient, path: str, title: str, active: str
+) -> None:
     response = client.get(path)
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
@@ -37,7 +38,7 @@ def test_pages_render_with_navigation(path: str, title: str, active: str) -> Non
     assert 'aria-label="Hoofdmenu"' in html
 
 
-def test_assets_are_local_and_served() -> None:
+def test_assets_are_local_and_served(client: TestClient) -> None:
     html = client.get("/").text
     for url in re.findall(r'(?:href|src)="(/static/[^"]+)"', html):
         assert client.get(url).status_code == 200, url
@@ -66,10 +67,11 @@ class _InlineCodeFinder(HTMLParser):
             self.found.append(f"event-handler op <{tag}>")
 
 
-def test_no_inline_scripts_or_styles() -> None:
-    finder = _InlineCodeFinder()
-    finder.feed(client.get("/").text)
-    assert finder.found == []
+def test_no_inline_scripts_or_styles(client: TestClient) -> None:
+    for path in ("/", "/meer", "/auth/uitgelogd"):
+        finder = _InlineCodeFinder()
+        finder.feed(client.get(path).text)
+        assert finder.found == [], path
 
 
 def test_vendored_checksums_match_readme() -> None:
@@ -86,7 +88,21 @@ def test_dutch_date() -> None:
     assert dutch_date(date(2027, 1, 4)) == "maandag 4 januari"
 
 
-def test_pages_not_in_openapi(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_pages_require_login(anon_client: TestClient) -> None:
+    response = anon_client.get("/taken?filter=a")
+    assert response.status_code == 303
+    assert response.headers["location"] == "/auth/login?next=/taken%3Ffilter%3Da"
+
+
+def test_htmx_request_without_session_gets_hx_redirect(
+    anon_client: TestClient,
+) -> None:
+    response = anon_client.get("/", headers={"HX-Request": "true"})
+    assert response.status_code == 401
+    assert response.headers["hx-redirect"] == "/auth/login?next=/"
+
+
+def test_pages_not_in_openapi(db: Session, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("APP_ENV", "dev")
     get_settings.cache_clear()
     try:

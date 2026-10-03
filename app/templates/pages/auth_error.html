@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  <h1 class="page-title">Inloggen lukt niet</h1>
+</header>
+<div class="card">
+  {% if reason == "config" %}
+  <p>Inloggen is nog niet ingesteld. De beheerder moet de OIDC-instellingen invullen.</p>
+  {% elif reason == "idp" %}
+  <p>De inlogdienst is op dit moment niet bereikbaar. Probeer het straks opnieuw.</p>
+  {% else %}
+  <p>Er ging iets mis bij het inloggen. Probeer het opnieuw.</p>
+  <a class="button" href="/auth/login">Opnieuw inloggen</a>
+  {% endif %}
+</div>
+{% endblock %}
