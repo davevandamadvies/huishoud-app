@@ -97,3 +97,15 @@ def plan_label(planned: date, at: time | None, reference: date) -> str:
     if 1 < days < 7:
         return f"gepland {short_weekday(planned)}{clock}"
     return f"gepland {short_date(planned)}{clock}"
+
+
+def when_label(moment: datetime, reference: date) -> str:
+    """Tijdstip in de tijdzone van het huishouden: 'vandaag 09:12', 'za 3 okt'."""
+    local = moment.astimezone(TIMEZONE)
+    days = (reference - local.date()).days
+    clock = local.strftime("%H:%M")
+    if days == 0:
+        return f"vandaag {clock}"
+    if days == 1:
+        return f"gisteren {clock}"
+    return f"{short_weekday(local.date())} {short_date(local.date())}"

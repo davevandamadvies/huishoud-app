@@ -6,6 +6,9 @@
       {% else %}
       <div class="muted">Nog niets gepland deze week</div>
       {% endif %}
+      {% if week_standings %}
+      <a class="muted score-line" href="/scores">{% for s in week_standings %}{{ s.user.display_name }} {{ s.points }}{% if not loop.last %} · {% endif %}{% endfor %}</a>
+      {% endif %}
     </div>
     <progress class="progress" max="{{ view.week_total or 1 }}" value="{{ view.week_done }}" aria-label="Voortgang deze week">{{ view.week_done }} van {{ view.week_total }}</progress>
   </section>

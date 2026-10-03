@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from app import categories, planning, settings_store, today_view
+from app import categories, planning, scores, settings_store, today_view
 from app.auth import CurrentUser, current_user
-from app.dates import due_label, plan_label, today
+from app.dates import due_label, plan_label, today, when_label
 from app.db import get_db
 from app.models import User
 from app.templating import templates
@@ -30,6 +30,9 @@ def _today_context(db: Session, user: User) -> dict:
         "active_nav": "today",
         "today": day,
         "view": today_view.build(db, day),
+        "week_standings": scores.standings(db, *scores.bounds(scores.Period.WEEK, day))
+        if settings_store.competition_enabled(db)
+        else [],
         "due_label": due_label,
         "plan_label": plan_label,
         "responsible": planning.responsible,
@@ -62,12 +65,36 @@ def _placeholder(key: str, title: str):
 
 
 @router.get("/scores")
-def scores_page(request: Request, user: CurrentUser) -> HTMLResponse:
-    return templates.TemplateResponse(
-        request,
-        "pages/scores.html",
-        {"user": user, "page_title": "Scores", "active_nav": "scores"},
-    )
+def scores_page(
+    request: Request,
+    user: CurrentUser,
+    db: DB,
+    periode: str = "week",
+    categorie: str = "",
+) -> HTMLResponse:
+    try:
+        period = scores.Period(periode)
+    except ValueError:
+        period = scores.Period.WEEK
+    category_id = int(categorie) if categorie.isdigit() else None
+    context = {
+        "user": user,
+        "page_title": "Scores",
+        "active_nav": "scores",
+        "periods": [
+            (scores.Period.WEEK, "Week"),
+            (scores.Period.MONTH, "Maand"),
+            (scores.Period.TOTAL, "Totaal"),
+        ],
+        "period": period,
+        "selected_category": category_id,
+        "categories": categories.list_categories(db),
+        "today": today(),
+        "when_label": when_label,
+    }
+    if request.state.competition:
+        context["board"] = scores.build(db, period, today(), category_id)
+    return templates.TemplateResponse(request, "pages/scores.html", context)
 
 
 @router.post("/instellingen/competitie")
