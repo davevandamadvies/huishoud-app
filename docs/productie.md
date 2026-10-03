@@ -56,6 +56,9 @@ De app accepteert alleen RS256-ondertekende ID-tokens en eist PKCE (S256).
 | `OIDC_CLIENT_ID` | `huishoud` | |
 | `OIDC_CLIENT_SECRET` | *(geheim)* | Het secret zelf (niet de hash). Alleen in `.env`, nooit in git. |
 | `INITIAL_ADMIN_SUB` | *(zie stap 4)* | |
+| `VAPID_PUBLIC_KEY` | *(zie stap 6)* | Voor meldingen. |
+| `VAPID_PRIVATE_KEY` | *(geheim)* | Voor meldingen. Alleen in `.env`, nooit in git. |
+| `VAPID_SUBJECT` | `mailto:jij@<domein>` | Contactadres dat de pushdienst (Google) bij problemen gebruikt. |
 | `FORWARDED_ALLOW_IPS` | `172.20.0.10` | IP van de reverse proxy, zodat uvicorn de `X-Forwarded-*`-headers van alleen die proxy vertrouwt. **Nooit `*`.** |
 
 Met `APP_ENV=prod` en een `https://`-`BASE_URL` stuurt de app zelf ook
@@ -100,6 +103,23 @@ docker compose run --rm huishoud alembic upgrade head
 docker compose run --rm huishoud python -m app.seed      # eenmalig, optioneel
 ```
 
+## 6. Meldingen (Web Push)
+
+Maak eenmalig een sleutelpaar en zet de regels in `.env` (gebruik voor
+`huishoud` en `huishoud-test` elk een eigen paar):
+
+```sh
+docker compose run --rm huishoud python -m app.push sleutels
+```
+
+Herstart daarna de service. Vervang de sleutels niet zonder reden: bestaande
+abonnementen werken dan niet meer en iedereen moet meldingen opnieuw aanzetten.
+
+De app stuurt meldingen alleen naar bekende pushdiensten (o.a.
+`fcm.googleapis.com` voor Chrome op Android); de container heeft daarvoor
+uitgaand HTTPS-verkeer nodig. Meldingen werken alleen via HTTPS met een
+certificaat dat de telefoon vertrouwt.
+
 ## Controle na het uitrollen
 
 - `https://huishoud.<domein>/healthz` geeft `{"status":"ok"}`.
@@ -107,3 +127,5 @@ docker compose run --rm huishoud python -m app.seed      # eenmalig, optioneel
   ontbreken variabelen: de app-log noemt welke.
 - In de browser hebben de cookies `__Host-huishoud_session` de vlaggen
   `Secure`, `HttpOnly` en `SameSite=Lax`.
+- Instellingen → Meldingen → "Meldingen aanzetten" en "Testmelding sturen"
+  geeft een melding op de telefoon.

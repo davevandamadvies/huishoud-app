@@ -3,7 +3,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app import audit, sessions
+from app import audit, push, sessions
 from app.models import Role, User, UserStatus
 
 AVATAR_COLORS = 6
@@ -123,6 +123,7 @@ def deactivate(db: Session, actor: User, user: User) -> None:
         raise UserAdminError("Er moet minimaal één actieve beheerder blijven.")
     user.status = UserStatus.DEACTIVATED
     revoked = sessions.revoke_all_sessions(db, user)
+    devices = push.remove_all_for_user(db, user)
     audit.record(
         db,
         "user.deactivate",
@@ -130,7 +131,11 @@ def deactivate(db: Session, actor: User, user: User) -> None:
         object_type="user",
         object_id=user.id,
         old={"status": UserStatus.ACTIVE.value},
-        new={"status": UserStatus.DEACTIVATED.value, "sessions_revoked": revoked},
+        new={
+            "status": UserStatus.DEACTIVATED.value,
+            "sessions_revoked": revoked,
+            "push_subscriptions_removed": devices,
+        },
     )
     db.commit()
 

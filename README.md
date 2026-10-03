@@ -79,10 +79,18 @@ toe aan `/etc/hosts`: `127.0.0.1 huishoud.localhost auth.huishoud.localhost`.
 | `OIDC_CLIENT_ID` | – | Client-ID van de app in Authelia |
 | `OIDC_CLIENT_SECRET` | – | Client-secret (geheim, alleen in `.env`) |
 | `OIDC_SCOPES` | `openid profile` | Gevraagde scopes |
+| `VAPID_PUBLIC_KEY` | – | Publieke sleutel voor meldingen (Web Push) |
+| `VAPID_PRIVATE_KEY` | – | Privésleutel voor meldingen (geheim, alleen in `.env`) |
+| `VAPID_SUBJECT` | – | Contactadres voor de pushdienst, bijv. `mailto:jij@example.com` |
 | `FORWARDED_ALLOW_IPS` | `127.0.0.1` | (uvicorn) IP van de reverse proxy waarvan `X-Forwarded-*` wordt vertrouwd |
 
 Ontbreken `BASE_URL` of `OIDC_*`, dan start de app wel (healthcheck werkt), maar
 blijft hij dicht: inloggen toont "Inloggen is nog niet ingesteld".
+
+Zonder de drie `VAPID_*`-variabelen staan meldingen uit; de rest van de app
+werkt gewoon. Sleutels maak je met `python -m app.push sleutels` (in dev doet
+`dev/setup.sh` dat). Iedereen zet meldingen daarna zelf aan via
+Instellingen → Meldingen.
 
 Wie bij Authelia kan inloggen maar niet als gebruiker in de app bekend is, krijgt
 "Geen toegang" met zijn account-ID (`sub`). Dat ID gebruik je voor

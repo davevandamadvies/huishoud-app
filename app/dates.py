@@ -35,6 +35,11 @@ def today() -> date:
     return datetime.now(TIMEZONE).date()
 
 
+def local_date(moment: datetime) -> date:
+    """Tijdstip (UTC) als datum in de tijdzone van het huishouden."""
+    return moment.astimezone(TIMEZONE).date()
+
+
 def dutch_date(value: date, reference: date | None = None) -> str:
     """Bijv. 'zaterdag 3 oktober'; met jaartal als het niet dit jaar is."""
     text = f"{_WEEKDAYS[value.weekday()]} {value.day} {_MONTHS[value.month - 1]}"

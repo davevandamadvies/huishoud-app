@@ -2,6 +2,7 @@
 
 from app.models.audit import AuditLog
 from app.models.category import Category
+from app.models.push import PushSubscription
 from app.models.setting import Setting
 from app.models.task import (
     Occurrence,
@@ -19,6 +20,7 @@ __all__ = [
     "OccurrenceOwner",
     "OccurrenceStatus",
     "Performer",
+    "PushSubscription",
     "Setting",
     "Task",
     "Role",
