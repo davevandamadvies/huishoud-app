@@ -52,6 +52,10 @@ def test_text_contrast(fg: str, bg: str) -> None:
     assert contrast(TOKENS[fg], TOKENS[bg]) >= 4.5
 
 
+def test_check_border_contrast() -> None:
+    assert contrast(TOKENS["color-check-border"], TOKENS["color-surface"]) >= 3
+
+
 def test_category_palette_has_css_and_contrast() -> None:
     from app.palette import CATEGORY_COLORS
 

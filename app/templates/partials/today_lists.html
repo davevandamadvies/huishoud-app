@@ -1,0 +1,66 @@
+<div id="today-lists" class="stack" hx-get="/vandaag/lijsten" hx-trigger="occurrence-completed from:body" hx-swap="outerHTML" hx-disinherit="*">
+  <section class="week" aria-label="Deze week">
+    <div class="week-summary">
+      {% if view.week_total %}
+      <div><strong>{{ view.week_done }} van {{ view.week_total }}</strong> gedaan deze week</div>
+      {% else %}
+      <div class="muted">Nog niets gepland deze week</div>
+      {% endif %}
+    </div>
+    <progress class="progress" max="{{ view.week_total or 1 }}" value="{{ view.week_done }}" aria-label="Voortgang deze week">{{ view.week_done }} van {{ view.week_total }}</progress>
+  </section>
+
+  {% if view.is_empty %}
+  <div class="empty-state">
+    <strong>Niks te doen</strong>
+    Lekker rustig. Taken met een datum verschijnen hier vanzelf.
+  </div>
+  {% endif %}
+
+  {% if view.late %}
+  <section aria-labelledby="late-title">
+    <h2 class="section-title late" id="late-title">Te laat</h2>
+    <ul class="list">
+      {% for occ in view.late %}{% with kind="late" %}{% include "partials/today_row.html" %}{% endwith %}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if view.today or view.done_today %}
+  <section aria-labelledby="today-title">
+    <h2 class="section-title" id="today-title">Vandaag</h2>
+    <ul class="list">
+      {% for occ in view.today %}{% with kind="today" %}{% include "partials/today_row.html" %}{% endwith %}{% endfor %}
+      {% for occ in view.done_today %}
+      <li class="list-item task-row is-done">
+        <span class="check check-done" role="img" aria-label="Gedaan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+        <a class="item-body item-link" href="/taken/{{ occ.task.id }}">
+          <div class="item-title">{{ occ.task.name }}</div>
+          <div class="item-meta">
+            <span class="dot cat-{{ occ.task.category.color }}" aria-hidden="true"></span>
+            <span>{{ occ.task.category.name }}</span>
+            <span>· {{ "samen" if occ.performers|length > 1 else occ.performers[0].user.display_name if occ.performers else "" }}</span>
+            {% if occ.performers|length > 1 %}
+            <span class="avatar-stack avatar-stack-sm">
+              {% for p in occ.performers %}<span class="avatar avatar-{{ p.user.avatar_color }}" aria-hidden="true">{{ p.user.initial }}</span>{% endfor %}
+            </span>
+            {% endif %}
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if view.soon %}
+  <section aria-labelledby="soon-title">
+    <h2 class="section-title" id="soon-title">Binnenkort</h2>
+    <ul class="list">
+      {% for occ in view.soon %}{% with kind="soon" %}{% include "partials/today_row.html" %}{% endwith %}{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>

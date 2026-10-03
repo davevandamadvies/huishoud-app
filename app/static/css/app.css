@@ -43,6 +43,8 @@
   --color-chip-active: #1a1d1a;
   --color-late: #b4530a;
   --color-focus: #1f7a55;
+  /* Rand van de afvinkcirkel: >= 3:1 op wit (mockup #c8cbc4 haalde 1.6:1) */
+  --color-check-border: #8e928b;
 
   /* Personen (zachte initiaal-avatars) */
   --avatar-1-bg: #fbe3db;
@@ -888,6 +890,68 @@ a.chip {
 
 .chevron-tight {
   margin-left: var(--space-2);
+}
+
+/* ---- Afvinkcirkel ---- */
+
+.task-row {
+  gap: 14px;
+}
+
+.check {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--color-on-accent);
+  background: var(--color-surface);
+  border: 2px solid var(--color-check-border);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Aanraakvlak 44px rond de cirkel van 28px */
+.check::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+button.check:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.check-done {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  cursor: default;
+}
+
+.check svg {
+  width: 16px;
+  height: 16px;
+}
+
+.item-link {
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.is-done .item-title {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.avatar-stack-sm .avatar {
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
 }
 
 /* ---- Bottom sheet ---- */
