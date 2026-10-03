@@ -1,16 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
-<header class="page-header">
-  <p class="page-eyebrow">{{ today | dutch_date }}</p>
+<header>
+  <p class="page-eyebrow">{{ today | dutch_date | capitalize }}</p>
   <h1 class="page-title">Vandaag</h1>
 </header>
 
-<section class="section" aria-labelledby="week-title">
-  <h2 id="week-title" class="visually-hidden">Deze week</h2>
+<section class="week" aria-label="Deze week">
+  <div class="week-summary">
+    {% if week_total %}
+    <div><strong>{{ week_done }} van {{ week_total }}</strong> gedaan deze week</div>
+    {% else %}
+    <div class="muted">Nog niets gepland deze week</div>
+    {% endif %}
+  </div>
   <progress class="progress" max="{{ week_total or 1 }}" value="{{ week_done }}" aria-label="Voortgang deze week">{{ week_done }} van {{ week_total }}</progress>
 </section>
 
-<section class="section">
+<section>
   <div class="empty-state">
     <strong>Niks te doen</strong>
     Lekker rustig. Zodra er taken zijn, zie je ze hier.

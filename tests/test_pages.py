@@ -23,7 +23,7 @@ STATIC = Path(__file__).resolve().parent.parent / "app" / "static"
         ("/planning", "Planning", "/planning"),
         ("/taken", "Taken", "/taken"),
         ("/scores", "Scores", "/scores"),
-        ("/meer", "Meer", "/meer"),
+        ("/meer", "Instellingen", "/meer"),
     ],
 )
 def test_pages_render_with_navigation(path: str, title: str, active: str) -> None:

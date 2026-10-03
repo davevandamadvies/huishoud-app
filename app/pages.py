@@ -38,4 +38,4 @@ def _placeholder(key: str, title: str):
 router.add_api_route("/planning", _placeholder("planning", "Planning"), methods=["GET"])
 router.add_api_route("/taken", _placeholder("tasks", "Taken"), methods=["GET"])
 router.add_api_route("/scores", _placeholder("scores", "Scores"), methods=["GET"])
-router.add_api_route("/meer", _placeholder("more", "Meer"), methods=["GET"])
+router.add_api_route("/meer", _placeholder("more", "Instellingen"), methods=["GET"])
