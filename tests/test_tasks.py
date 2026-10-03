@@ -168,7 +168,8 @@ def test_due_label(offset: int, text: str, tone: str) -> None:
 
 
 def test_due_label_far_and_none() -> None:
-    assert due_label(date(2027, 3, 1), date(2026, 10, 3)) == ("1 mrt", "later")
+    assert due_label(date(2027, 3, 1), date(2026, 10, 3)) == ("1 mrt 2027", "later")
+    assert due_label(date(2026, 12, 1), date(2026, 10, 3)) == ("1 dec", "later")
     assert due_label(None, date(2026, 10, 3)) == ("nog geen datum", "none")
 
 

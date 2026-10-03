@@ -84,8 +84,10 @@ def test_vendored_checksums_match_readme() -> None:
 
 
 def test_dutch_date() -> None:
-    assert dutch_date(date(2026, 10, 3)) == "zaterdag 3 oktober"
-    assert dutch_date(date(2027, 1, 4)) == "maandag 4 januari"
+    ref = date(2026, 10, 3)
+    assert dutch_date(date(2026, 10, 3), ref) == "zaterdag 3 oktober"
+    assert dutch_date(date(2027, 1, 4), ref) == "maandag 4 januari 2027"
+    assert dutch_date(date(2027, 1, 4), date(2027, 1, 1)) == "maandag 4 januari"
 
 
 def test_pages_require_login(anon_client: TestClient) -> None:
