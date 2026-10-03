@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import audit, sessions
+from app import audit, sessions, settings_store
 from app.db import get_db
 from app.models import User
 from app.oidc import OIDCClient, OIDCError, get_oidc_client
@@ -68,6 +68,8 @@ def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> U
         raise NotAuthenticated
     db.commit()  # verlenging van de sessie opslaan
     request.state.user = session.user
+    # Voor templates: punten en scorebord alleen als de competitie aan staat.
+    request.state.competition = settings_store.competition_enabled(db)
     return session.user
 
 

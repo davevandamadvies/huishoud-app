@@ -2,6 +2,7 @@
 
 from app.models.audit import AuditLog
 from app.models.category import Category
+from app.models.setting import Setting
 from app.models.task import (
     Occurrence,
     OccurrenceOwner,
@@ -18,6 +19,7 @@ __all__ = [
     "OccurrenceOwner",
     "OccurrenceStatus",
     "Performer",
+    "Setting",
     "Task",
     "Role",
     "User",

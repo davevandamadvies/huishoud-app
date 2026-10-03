@@ -1,0 +1,11 @@
+<li class="list-item" id="competition-row">
+  <div class="item-body">
+    <div class="item-title" id="competition-label">Competitie</div>
+    <div class="item-meta">{{ "Punten en scorebord staan aan" if request.state.competition else "Punten en scorebord zijn verborgen" }}</div>
+  </div>
+  <button class="switch" type="button" role="switch" aria-labelledby="competition-label"
+          aria-checked="{{ 'true' if request.state.competition else 'false' }}"
+          hx-post="/instellingen/competitie" hx-target="#competition-row" hx-swap="outerHTML">
+    <span class="switch-knob" aria-hidden="true"></span>
+  </button>
+</li>

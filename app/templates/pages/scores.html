@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  <h1 class="page-title">Scores</h1>
+</header>
+{% if request.state.competition %}
+<div class="empty-state">
+  <strong>Nog geen scores</strong>
+  Vink taken af met punten; het scorebord verschijnt hier.
+</div>
+{% else %}
+<div class="card">
+  <p>De competitie staat uit. Punten zijn altijd optioneel: zet de competitie aan als je samen punten wilt sparen.</p>
+  <a class="button button-outline" href="/meer">Naar Instellingen</a>
+</div>
+{% endif %}
+{% endblock %}
