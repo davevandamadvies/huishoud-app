@@ -3,7 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.db import Base
+import app.models  # noqa: F401  (registreert alle modellen op Base.metadata)
+from app.db import Base, UTCDateTime
 from app.settings import get_settings
 
 # this is the Alembic Config object, which provides
@@ -30,6 +31,13 @@ target_metadata = Base.metadata
 # ... etc.
 
 
+def render_item(type_: str, obj: object, autogen_context: object) -> str | bool:
+    """Eigen kolomtypes als gewone SQLAlchemy-types in migraties schrijven."""
+    if type_ == "type" and isinstance(obj, UTCDateTime):
+        return "sa.DateTime()"
+    return False
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -48,6 +56,8 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True,
+        render_item=render_item,
     )
 
     with context.begin_transaction():
@@ -68,7 +78,13 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            # SQLite kan kolommen niet wijzigen; batch-modus kopieert de tabel.
+            render_as_batch=True,
+            render_item=render_item,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
