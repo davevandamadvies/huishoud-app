@@ -76,4 +76,13 @@
     var focusable = sheet().querySelector("[data-autofocus], h2");
     if (focusable) focusable.focus();
   });
+
+  // Service worker registreren (voor meldingen en de offline-pagina).
+  if ("serviceWorker" in navigator && window.isSecureContext) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {
+        // Geen service worker: de app werkt gewoon, alleen zonder meldingen.
+      });
+    });
+  }
 })();
