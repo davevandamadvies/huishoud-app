@@ -12,6 +12,7 @@ from app.db import Base, get_engine, new_session, reset_engine_cache
 from app.models import User
 from app.settings import get_settings
 from tests.factories import make_user
+from tests.push_helpers import vapid  # noqa: F401  (fixture)
 
 # Tests draaien nooit met productie-instellingen.
 os.environ["APP_ENV"] = "test"

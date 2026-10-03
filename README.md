@@ -90,7 +90,13 @@ blijft hij dicht: inloggen toont "Inloggen is nog niet ingesteld".
 Zonder de drie `VAPID_*`-variabelen staan meldingen uit; de rest van de app
 werkt gewoon. Sleutels maak je met `python -m app.push sleutels` (in dev doet
 `dev/setup.sh` dat). Iedereen zet meldingen daarna zelf aan via
-Instellingen → Meldingen.
+Instellingen → Meldingen, en kiest onder "Mijn reminders" wanneer en hoe vaak
+er een update komt.
+
+De herinneringen verstuurt de app zelf: een achtergrondtaak kijkt elke minuut
+(tijdzone Europe/Amsterdam) wat er volgens ieders voorkeuren weg moet. De tabel
+`reminder_log` voorkomt dat iets twee keer wordt verstuurd; een tijdstip dat
+tijdens een herstart is gemist, gaat hooguit 15 minuten later alsnog weg.
 
 Wie bij Authelia kan inloggen maar niet als gebruiker in de app bekend is, krijgt
 "Geen toegang" met zijn account-ID (`sub`). Dat ID gebruik je voor
