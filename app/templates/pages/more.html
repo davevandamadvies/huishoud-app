@@ -17,6 +17,19 @@
   </ul>
 </section>
 
+<section>
+  <h2 class="section-title">Huishouden</h2>
+  <ul class="list">
+    <li>
+      <a class="list-item list-link" href="/categorieen">
+        <span class="item-title">Categorieën</span>
+        <span class="item-end">{{ category_count }}</span>
+        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+      </a>
+    </li>
+  </ul>
+</section>
+
 {% if user.is_admin %}
 <section>
   <h2 class="section-title">Gebruikers <span class="section-note">· alleen beheerder</span></h2>

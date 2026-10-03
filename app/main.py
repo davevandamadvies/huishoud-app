@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
-from app import admin, auth, pages
+from app import admin, auth, category_pages, pages
 from app.bootstrap import run_bootstrap
 from app.db import new_session
 from app.oidc import OIDCNotConfigured
@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(admin.router)
+    app.include_router(category_pages.router)
 
     @app.exception_handler(auth.NotAuthenticated)
     def _not_authenticated(request: Request, _exc: Exception) -> Response:
