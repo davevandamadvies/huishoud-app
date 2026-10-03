@@ -5,21 +5,9 @@
   <h1 class="page-title">Vandaag</h1>
 </header>
 
-<section class="week" aria-label="Deze week">
-  <div class="week-summary">
-    {% if week_total %}
-    <div><strong>{{ week_done }} van {{ week_total }}</strong> gedaan deze week</div>
-    {% else %}
-    <div class="muted">Nog niets gepland deze week</div>
-    {% endif %}
-  </div>
-  <progress class="progress" max="{{ week_total or 1 }}" value="{{ week_done }}" aria-label="Voortgang deze week">{{ week_done }} van {{ week_total }}</progress>
-</section>
+{% include "partials/today_lists.html" %}
 
-<section>
-  <div class="empty-state">
-    <strong>Niks te doen</strong>
-    Lekker rustig. Zodra er taken zijn, zie je ze hier.
-  </div>
-</section>
+<a class="fab" href="/taken/nieuw" aria-label="Taak toevoegen">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+</a>
 {% endblock %}

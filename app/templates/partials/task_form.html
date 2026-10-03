@@ -10,7 +10,7 @@
       <div class="label">Volgende keer</div>
       <div class="due-{{ tone }}">{{ label }}</div>
     </div>
-    <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet">Afvinken</button>
+    <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Afvinken</button>
   </div>
   {% endif %}
   <form class="card form" hx-post="{{ '/taken/%d' % task.id if task else '/taken' }}" hx-target="#task-form" hx-swap="outerHTML" novalidate>

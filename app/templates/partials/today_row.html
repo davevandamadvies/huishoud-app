@@ -1,0 +1,16 @@
+{% set task = occ.task %}
+<li class="list-item task-row">
+  <button class="check" type="button" hx-get="/taken/{{ task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML" aria-label="{{ task.name }} afvinken"></button>
+  <a class="item-body item-link" href="/taken/{{ task.id }}">
+    <div class="item-title">{{ task.name }}</div>
+    <div class="item-meta">
+      <span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>
+      <span>{{ task.category.name }}</span>
+      <span>· {{ task.owner.display_name if task.owner else "iedereen" }}</span>
+      {% if kind != "today" %}
+      {% set label, tone = due_label(occ.effective_date, today) %}
+      <span class="due-{{ tone }}">· {{ label }}</span>
+      {% endif %}
+    </div>
+  </a>
+</li>
