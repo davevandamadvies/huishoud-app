@@ -16,6 +16,7 @@
       {% set km = km_left_label(occ) %}{% if km %}<span>· {{ km }}</span>{% endif %}
       {% if occ.planned_date and kind != "late" %}
       <span>· {{ plan_label(occ.planned_date, occ.planned_time, today) }}</span>
+      {% if occ.days_after_due %}<span class="late">· na vervaldatum</span>{% endif %}
       {% elif kind != "today" %}
       {% set label, tone = due_label(occ.effective_date, today) %}
       <span class="due-{{ tone }}">· {{ label }}</span>

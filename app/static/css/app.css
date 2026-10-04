@@ -786,7 +786,7 @@ fieldset.field {
   color: var(--color-late);
 }
 
-.hint-warning:empty {
+.plan-warnings:empty {
   display: none;
 }
 
@@ -1491,6 +1491,42 @@ body.sheet-open {
   display: none;
 }
 
+/* Alleen een vervaldatum (nog niet ingepland): open stip / omlijnd label */
+.month-dots .dot-due {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--color-text-muted);
+}
+
+.time-due {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.icon-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  color: var(--color-accent);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--color-accent-soft);
+}
+
+.icon-button svg {
+  width: 22px;
+  height: 22px;
+}
+
 /* Breed scherm: korte taaknamen in de cel, zoals een agenda */
 @media (min-width: 640px) {
   .month-day {
@@ -1511,6 +1547,11 @@ body.sheet-open {
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .month-name.is-due {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--color-border);
   }
 
   .month-name {

@@ -98,16 +98,44 @@ def _planned(db: Session, start: date, end: date) -> list[Occurrence]:
     )
 
 
+def _due(db: Session, start: date, end: date) -> list[Occurrence]:
+    """Nog niet ingeplande taken met een vervaldatum in de periode."""
+    return list(
+        db.scalars(
+            select(Occurrence)
+            .join(Task)
+            .where(
+                Occurrence.status == OccurrenceStatus.OPEN,
+                Occurrence.due_date >= start,
+                Occurrence.due_date <= end,
+                Task.archived_at.is_(None),
+            )
+            .options(
+                joinedload(Occurrence.task).joinedload(Task.category),
+                joinedload(Occurrence.task).joinedload(Task.owner),
+            )
+        )
+    )
+
+
 def _sort_key(occurrence: Occurrence) -> tuple:
     planned_time = occurrence.planned_time
-    return (planned_time is None, planned_time or time.max, occurrence.task.name)
+    return (
+        occurrence.status != OccurrenceStatus.PLANNED,  # eerst gepland, dan vervalt
+        planned_time is None,
+        planned_time or time.max,
+        occurrence.task.name,
+    )
 
 
 def items_by_day(db: Session, start: date, end: date) -> dict[date, list[Occurrence]]:
-    """Wat er per dag in de agenda staat."""
+    """Wat er per dag in de agenda staat: ingepland op de plandatum, anders op
+    de vervaldatum."""
     result: dict[date, list[Occurrence]] = defaultdict(list)
     for occurrence in _planned(db, start, end):
         result[occurrence.planned_date].append(occurrence)
+    for occurrence in _due(db, start, end):
+        result[occurrence.due_date].append(occurrence)
     for day_items in result.values():
         day_items.sort(key=_sort_key)
     return result

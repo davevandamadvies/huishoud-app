@@ -34,12 +34,13 @@ def test_view_week_and_day(db: Session, user: User) -> None:
     assert view.next == day + timedelta(days=7)
 
 
-def test_archived_and_unplanned_not_shown(db: Session, user: User) -> None:
+def test_archived_not_shown(db: Session, user: User) -> None:
     day = today() + timedelta(days=1)
     task = make_task(db, name="Weg")
     plan(db, user, task, day)
     tasks.archive(db, user, task)
-    make_task(db, name="Alleen vervaldatum", due=day)
+    gone = make_task(db, name="Ook weg", due=day)
+    tasks.archive(db, user, gone)
     assert planning_view.build(db, day).items == []
 
 
@@ -173,3 +174,92 @@ def test_month_page(client: TestClient, db: Session, user: User) -> None:
 def test_mode_kept_in_links(client: TestClient) -> None:
     html = client.get("/planning/inhoud?weergave=week").text
     assert "weergave=week&amp;dag=" in html
+
+
+# ---- Vervaldata in de agenda (#63) ----
+
+
+def test_due_task_shows_on_due_date(db: Session, user: User) -> None:
+    day = today() + timedelta(days=3)
+    make_task(db, name="Alleen vervaldatum", due=day)
+    plan(db, user, make_task(db, name="Gepland"), day)
+    view = planning_view.build(db, day)
+    assert [o.task.name for o in view.items] == ["Gepland", "Alleen vervaldatum"]
+
+
+def test_planned_task_moves_to_plan_date(db: Session, user: User) -> None:
+    due = today() + timedelta(days=3)
+    later = due + timedelta(days=4)
+    task = make_task(db, name="Ramen", due=due)
+    plan(db, user, task, later)
+    assert planning_view.build(db, due).items == []
+    items = planning_view.build(db, later).items
+    assert [o.task.name for o in items] == ["Ramen"]
+    occurrence = items[0]
+    assert occurrence.due_date == due  # onthouden
+    assert occurrence.days_after_due == 4
+
+
+def test_planned_before_due_is_not_late(db: Session, user: User) -> None:
+    due = today() + timedelta(days=5)
+    task = make_task(db, name="Ramen", due=due)
+    plan(db, user, task, due - timedelta(days=2))
+    assert tasks.pending_occurrence(db, task).days_after_due == 0
+
+
+def test_cancel_restores_due_date(db: Session, user: User) -> None:
+    due = today() + timedelta(days=3)
+    task = make_task(db, name="Ramen", due=due)
+    plan(db, user, task, due + timedelta(days=2))
+    planning.cancel(db, user, tasks.pending_occurrence(db, task))
+    items = planning_view.build(db, due).items
+    assert [o.task.name for o in items] == ["Ramen"]
+
+
+def test_day_list_marks_due_and_after_due(
+    client: TestClient, db: Session, user: User
+) -> None:
+    due = today() + timedelta(days=2)
+    make_task(db, name="Bladeren", due=due)
+    html = client.get(f"/planning?dag={due.isoformat()}").text
+    assert "vervalt" in html
+    assert "Bladeren inplannen" in html  # knop om in te plannen
+    task = make_task(db, name="Dakgoot", due=due)
+    later = due + timedelta(days=3)
+    plan(db, user, task, later)
+    html = client.get(f"/planning?dag={later.isoformat()}").text
+    assert "na vervaldatum" in html
+
+
+def test_late_due_task_is_marked(client: TestClient, db: Session) -> None:
+    past = today() - timedelta(days=2)
+    make_task(db, name="Oud", due=past)
+    html = client.get(f"/planning?dag={past.isoformat()}").text
+    assert "te laat" in html
+
+
+def test_plan_sheet_warns_after_due(client: TestClient, db: Session) -> None:
+    due = today() + timedelta(days=2)
+    task = make_task(db, name="Ramen", due=due)
+    url = f"/taken/{task.id}/inplannen/controle"
+    later = client.get(
+        url, params={"planned_date": (due + timedelta(days=3)).isoformat()}
+    )
+    assert "3 dagen na de vervaldatum" in later.text
+    on_time = client.get(url, params={"planned_date": due.isoformat()})
+    assert "vervaldatum" not in on_time.text
+
+
+def test_task_detail_shows_days_after_due(
+    client: TestClient, db: Session, user: User
+) -> None:
+    due = today() + timedelta(days=2)
+    task = make_task(db, name="Ramen", due=due)
+    plan(db, user, task, due + timedelta(days=1))
+    assert "1 dag na de vervaldatum" in client.get(f"/taken/{task.id}").text
+
+
+def test_today_row_marks_after_due(client: TestClient, db: Session, user: User) -> None:
+    task = make_task(db, name="Ramen", due=today() - timedelta(days=1))
+    plan(db, user, task, today() + timedelta(days=1))
+    assert "na vervaldatum" in client.get("/").text

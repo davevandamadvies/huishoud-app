@@ -129,15 +129,15 @@ def test_plan_sheet_warns_outside_season(client: TestClient, db: Session) -> Non
     task = make_task(db, name="Gras", season_months="3,4,5,6,7,8,9,10")
     out = date(today().year + 1, 1, 10)
     response = client.get(
-        f"/taken/{task.id}/inplannen/seizoen", params={"planned_date": out.isoformat()}
+        f"/taken/{task.id}/inplannen/controle", params={"planned_date": out.isoformat()}
     )
-    assert "buiten het seizoen (mrt–okt)" in response.text
+    assert "Buiten het seizoen (mrt–okt)" in response.text
     inside = date(today().year + 1, 5, 10)
     response = client.get(
-        f"/taken/{task.id}/inplannen/seizoen",
+        f"/taken/{task.id}/inplannen/controle",
         params={"planned_date": inside.isoformat()},
     )
-    assert "buiten" not in response.text
+    assert "seizoen" not in response.text
 
 
 def test_plan_sheet_suggests_date_in_season(client: TestClient, db: Session) -> None:

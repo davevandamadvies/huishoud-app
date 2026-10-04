@@ -182,6 +182,13 @@ class Occurrence(Base):
         return self.status in (OccurrenceStatus.OPEN, OccurrenceStatus.PLANNED)
 
     @property
+    def days_after_due(self) -> int:
+        """Hoeveel dagen de plandatum na de (bewaarde) vervaldatum ligt; 0 = niet."""
+        if self.planned_date is None or self.due_date is None:
+            return 0
+        return max(0, (self.planned_date - self.due_date).days)
+
+    @property
     def effective_date(self) -> date | None:
         """Plandatum gaat voor de berekende vervaldatum."""
         return self.planned_date or self.due_date
