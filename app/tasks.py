@@ -11,7 +11,6 @@ from app.db import utcnow
 from app.forms import FormData
 from app.models import Category, Occurrence, OccurrenceStatus, Task, User, Vehicle
 from app.recurrence import (
-    DEFAULT_WINTER,
     IntervalUnit,
     RecurrenceType,
     format_months,
@@ -88,6 +87,41 @@ def _int(value: str) -> int | None:
         return None
 
 
+MONTH_STATES = ("gewoon", "anders", "pauze")
+
+
+def _parse_month_plan(
+    form: FormData, recurrence: RecurrenceType, errors: dict[str, str]
+) -> tuple[str | None, int | None, str | None]:
+    """'Andere frequentie per maand': (season_months, winter_every, winter_months).
+
+    Per maand een stand: gewoon, anders (andere frequentie) of pauze. Opslag
+    blijft zoals voorheen: pauze = buiten het seizoen, anders = 'winter'.
+    """
+    if form.get_str("month_plan") not in ("1", "on"):
+        return None, None, None
+    states = {m: form.get_str(f"month_{m}", "gewoon") for m in range(1, 13)}
+    paused = {m for m, state in states.items() if state == "pauze"}
+    other = {m for m, state in states.items() if state == "anders"}
+    if len(paused) == 12:
+        errors["month_plan"] = "Minstens één maand moet actief zijn."
+        return None, None, None
+    season_months = format_months(set(range(1, 13)) - paused)
+    if not other:
+        return season_months, None, None
+    if recurrence != RecurrenceType.INTERVAL:
+        errors["month_plan"] = (
+            "Een andere frequentie kan alleen bij 'Herhalen na het afvinken'. "
+            "Pauze kan wel."
+        )
+        return season_months, None, None
+    every = _int(form.get_str("alt_every"))
+    if every is None or not 1 <= every <= 3650:
+        errors["month_plan"] = "Vul de andere frequentie in (een heel getal vanaf 1)."
+        return season_months, None, None
+    return season_months, every, format_months(other)
+
+
 def parse_form(db: Session, form: FormData) -> TaskInput:
     errors: dict[str, str] = {}
 
@@ -158,29 +192,9 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         if km_interval is None or not 100 <= km_interval <= 500_000:
             errors["km_interval"] = "Kilometers: een heel getal van 100 tot 500.000."
 
-    season = {
-        int(m) for m in form.get_all("season") if m.isdigit() and 1 <= int(m) <= 12
-    }
-    season_months = format_months(season)
-
-    winter_every: int | None = None
-    winter_months: str | None = None
-    raw_winter = form.get_str("winter_every")
-    if raw_winter and recurrence == RecurrenceType.INTERVAL:
-        winter_every = _int(raw_winter)
-        if winter_every is None or not 1 <= winter_every <= 3650:
-            errors["winter_every"] = "Winter: een heel getal vanaf 1, of leeg."
-        months = {
-            int(m)
-            for m in form.get_all("winter_month")
-            if m.isdigit() and 1 <= int(m) <= 12
-        }
-        if not months:
-            errors["winter_every"] = "Kies minstens één wintermaand."
-        elif len(months) == 12:
-            errors["winter_every"] = "De winter kan niet het hele jaar zijn."
-        elif months != set(DEFAULT_WINTER):
-            winter_months = format_months(months)
+    season_months, winter_every, winter_months = _parse_month_plan(
+        form, recurrence, errors
+    )
 
     notes = form.get_str("notes") or None
     if notes and len(notes) > 2000:

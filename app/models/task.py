@@ -116,13 +116,14 @@ class Task(Base):
 
     @property
     def recurrence_text(self) -> str:
-        """Bijv. 'Jaarlijks of elke 15.000 km' of 'Elke 7 dagen · mrt–okt'."""
+        """Bijv. 'Jaarlijks of elke 15.000 km' of 'Elke 7 dagen · pauze nov–feb'."""
         text = describe(self.rule)
         if self.km_interval and self.vehicle_id:
             text += f" of elke {self.km_interval:,} km".replace(",", ".")
-        season = describe_season(self.season)
-        if season:
-            text += f" · {season}"
+        season = self.season
+        if season is not None:
+            paused = frozenset(range(1, 13)) - season
+            text += f" · pauze {describe_season(paused)}"
         return text
 
 

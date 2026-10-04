@@ -218,10 +218,6 @@ def describe(rule: Rule) -> str:
         text += " (vaste datum)"
     elif rule.winter_every:
         unit = _PLURAL[rule.unit] if rule.winter_every != 1 else _UNIT_ONE[rule.unit]
-        months = (
-            ""
-            if rule.winter_months == DEFAULT_WINTER
-            else f" ({describe_season(rule.winter_months)})"
-        )
-        text += f" · winter{months} elke {rule.winter_every} {unit}"
+        months = describe_season(rule.winter_months)
+        text += f" · {months} elke {rule.winter_every} {unit}"
     return text

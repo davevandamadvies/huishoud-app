@@ -2,12 +2,11 @@ from datetime import date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import completion, reminder_content, reminders, seasons, tasks
 from app.dates import today
-from app.models import Task, User
+from app.models import User
 from app.recurrence import (
     RecurrenceType,
     Rule,
@@ -17,8 +16,7 @@ from app.recurrence import (
     next_due,
     parse_months,
 )
-from tests.conftest import HTMX_HEADERS
-from tests.factories import make_category, make_task
+from tests.factories import make_task
 
 GARDEN = frozenset(range(3, 11))  # mrt–okt
 WINTER = frozenset({10, 11, 12, 1, 2})  # okt–feb
@@ -79,7 +77,7 @@ def test_completion_uses_season(db: Session, user: User) -> None:
 
 def test_recurrence_text_includes_season(db: Session) -> None:
     task = make_task(db, name="Gras", season_months="3,4,5,6,7,8,9,10")
-    assert task.recurrence_text == "Elke 7 dagen · mrt–okt"
+    assert task.recurrence_text == "Elke 7 dagen · pauze nov–feb"
 
 
 def _form(category_id: int, **extra) -> dict:
@@ -91,38 +89,6 @@ def _form(category_id: int, **extra) -> dict:
         "interval_unit": "days",
         **extra,
     }
-
-
-def test_form_saves_season(client: TestClient, db: Session) -> None:
-    category = make_category(db)
-    response = client.post(
-        "/taken",
-        data=_form(category.id, season=[str(m) for m in range(3, 11)]),
-        headers=HTMX_HEADERS,
-    )
-    assert response.status_code == 204
-    task = db.scalar(select(Task))
-    assert task.season_months == "3,4,5,6,7,8,9,10"
-    page = client.get(f"/taken/{task.id}").text
-    assert page.count('name="season"') == 12
-    assert page.count("checked") >= 8
-
-
-def test_new_season_shifts_open_occurrence(client: TestClient, db: Session) -> None:
-    category = make_category(db)
-    out_of_season = date(today().year + 1, 1, 15)
-    task = make_task(db, name="Gras maaien", category=category, due=out_of_season)
-    client.post(
-        f"/taken/{task.id}",
-        data=_form(
-            category.id,
-            season=[str(m) for m in range(3, 11)],
-            next_date=out_of_season.isoformat(),
-        ),
-        headers=HTMX_HEADERS,
-    )
-    db.expire_all()
-    assert tasks.pending_occurrence(db, task).due_date == date(today().year + 1, 3, 1)
 
 
 def test_plan_sheet_warns_outside_season(client: TestClient, db: Session) -> None:

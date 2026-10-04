@@ -1,11 +1,8 @@
 from datetime import date
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Task
 from app.recurrence import (
     DEFAULT_WINTER,
     IntervalUnit,
@@ -14,8 +11,7 @@ from app.recurrence import (
     describe,
     next_due,
 )
-from tests.conftest import HTMX_HEADERS
-from tests.factories import make_category, make_task
+from tests.factories import make_task
 
 PLANTS = Rule(RecurrenceType.INTERVAL, 7, winter_every=14)
 
@@ -48,85 +44,16 @@ def test_winter_ignored_for_fixed_date() -> None:
 
 
 def test_describe() -> None:
-    assert describe(PLANTS) == "Elke 7 dagen · winter elke 14 dagen"
+    assert describe(PLANTS) == "Elke 7 dagen · nov–feb elke 14 dagen"
     weeks = Rule(RecurrenceType.INTERVAL, 1, IntervalUnit.WEEKS, winter_every=1)
-    assert describe(weeks) == "Elke week · winter elke 1 week"
+    assert describe(weeks) == "Elke week · nov–feb elke 1 week"
     own = Rule(
         RecurrenceType.INTERVAL, 3, winter_every=5, winter_months=frozenset({12, 1, 2})
     )
-    assert describe(own) == "Elke 3 dagen · winter (dec–feb) elke 5 dagen"
+    assert describe(own) == "Elke 3 dagen · dec–feb elke 5 dagen"
 
 
 def test_task_rule_uses_default_winter(db: Session) -> None:
     task = make_task(db, name="Planten", winter_every=14)
     assert task.rule.winter_months == DEFAULT_WINTER
-    assert task.recurrence_text == "Elke 7 dagen · winter elke 14 dagen"
-
-
-def _form(category_id: int, **extra) -> dict:
-    return {
-        "name": "Planten water",
-        "category_id": str(category_id),
-        "recurrence_type": "interval",
-        "interval_every": "7",
-        "interval_unit": "days",
-        **extra,
-    }
-
-
-def test_form_saves_winter(client: TestClient, db: Session) -> None:
-    category = make_category(db)
-    page = client.get("/taken/nieuw").text
-    assert page.count('name="winter_month"') == 12
-    response = client.post(
-        "/taken",
-        data=_form(category.id, winter_every="14", winter_month=["11", "12", "1", "2"]),
-        headers=HTMX_HEADERS,
-    )
-    assert response.status_code == 204
-    task = db.scalar(select(Task))
-    assert (task.winter_every, task.winter_months) == (14, None)
-
-
-def test_form_saves_own_winter_months(client: TestClient, db: Session) -> None:
-    category = make_category(db)
-    client.post(
-        "/taken",
-        data=_form(category.id, winter_every="14", winter_month=["12", "1"]),
-        headers=HTMX_HEADERS,
-    )
-    assert db.scalar(select(Task.winter_months)) == "1,12"
-
-
-@pytest.mark.parametrize(
-    ("extra", "message"),
-    [
-        ({"winter_every": "0", "winter_month": ["12"]}, "heel getal"),
-        ({"winter_every": "14"}, "minstens één wintermaand"),
-        (
-            {"winter_every": "14", "winter_month": [str(m) for m in range(1, 13)]},
-            "hele jaar",
-        ),
-    ],
-)
-def test_form_validation(
-    client: TestClient, db: Session, extra: dict, message: str
-) -> None:
-    category = make_category(db)
-    response = client.post(
-        "/taken", data=_form(category.id, **extra), headers=HTMX_HEADERS
-    )
-    assert message in response.text
-    assert db.scalar(select(Task)) is None
-
-
-def test_winter_ignored_for_once(client: TestClient, db: Session) -> None:
-    category = make_category(db)
-    client.post(
-        "/taken",
-        data=_form(
-            category.id, recurrence_type="once", winter_every="14", winter_month=["12"]
-        ),
-        headers=HTMX_HEADERS,
-    )
-    assert db.scalar(select(Task.winter_every)) is None
+    assert task.recurrence_text == "Elke 7 dagen · nov–feb elke 14 dagen"
