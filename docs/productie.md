@@ -133,9 +133,12 @@ De app maakt elke nacht om 03:15 een kopie van de database in `BACKUP_DIR`
 bij de volgende start. Een verse kopie downloaden kan als beheerder via
 Instellingen → Back-up.
 
-Een back-up op dezelfde schijf beschermt tegen fouten in de app, niet tegen
-een kapotte NAS: kopieer `/data/backups` regelmatig naar een andere plek
-(bijv. met de back-upfunctie van de NAS).
+Gekozen opzet: alleen deze lokale back-up. De NAS draait in RAID, dus een
+kapotte schijf is opgevangen; de nachtelijke kopieën vangen fouten in de app
+op (terugzetten tot 14 dagen terug). Niet afgedekt: verlies van de hele NAS
+(defect, diefstal, brand) of ransomware. Wil je dat later toch afdekken, dan
+volstaat af en toe "Nu downloaden" of een geplande kopie van `/data/backups`
+naar een USB-schijf of cloudopslag.
 
 Terugzetten:
 
