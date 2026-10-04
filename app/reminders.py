@@ -1,8 +1,10 @@
 """Herinneringsvoorkeuren per gebruiker ("Mijn reminders").
 
 Elke gebruiker stelt zelf in wanneer de update komt (dagen, 1–3 tijdstippen),
-hoe ver die vooruitkijkt, of er losse meldingen per taak komen, stille uren
-en welke categorieën meedoen. Zonder opgeslagen rij gelden de standaarden.
+hoe ver die vooruitkijkt, of er losse meldingen per taak komen en welke
+categorieën meedoen. Er komen geen andere meldingen dan deze reminders, dus
+ook geen stille uren: alles komt op de tijdstippen die je zelf kiest.
+Zonder opgeslagen rij gelden de standaarden.
 """
 
 from dataclasses import dataclass
@@ -38,9 +40,6 @@ DEFAULTS = {
     "task_on_day": False,
     "task_days_before": 0,
     "task_late_daily": False,
-    "quiet_enabled": True,
-    "quiet_start": "22:00",
-    "quiet_end": "07:00",
 }
 
 
@@ -91,16 +90,6 @@ def days(preference: ReminderPreference) -> set[int]:
     return {int(d) for d in preference.update_days}
 
 
-def is_quiet(preference: ReminderPreference, moment: time) -> bool:
-    """Valt dit tijdstip binnen de stille uren (ook over middernacht)?"""
-    if not preference.quiet_enabled:
-        return False
-    start, end = parse_time(preference.quiet_start), parse_time(preference.quiet_end)
-    if start < end:
-        return start <= moment < end
-    return moment >= start or moment < end
-
-
 def frequency_key(day_string: str) -> str:
     for key, (_label, preset) in FREQUENCIES.items():
         if preset == day_string:
@@ -127,9 +116,7 @@ def _join(items: list[str]) -> str:
 @dataclass(frozen=True)
 class Summary:
     update: str
-    before: str
-    late: str
-    quiet: str
+    tasks: str
     categories: str
 
 
@@ -141,21 +128,19 @@ def summary(db: Session, user: User) -> Summary:
         )
     else:
         update = "Uit"
-    before_parts = []
+    parts = []
     if preference.task_on_day:
-        before_parts.append("op de dag")
+        parts.append("op de dag")
     if preference.task_days_before:
-        before_parts.append(DAYS_BEFORE_CHOICES[preference.task_days_before].lower())
-    before = _join(before_parts).capitalize() if before_parts else "Uit"
+        parts.append(f"{DAYS_BEFORE_CHOICES[preference.task_days_before]} vooraf")
+    if preference.task_late_daily:
+        parts.append("bij te laat")
+    tasks = " · ".join(parts).capitalize() if parts else "Uit"
     total = len(db.scalars(select(Category.id)).all())
     muted = len(muted_category_ids(db, user))
     return Summary(
         update=update,
-        before=before,
-        late="Dagelijks" if preference.task_late_daily else "Uit",
-        quiet=f"{preference.quiet_start}–{preference.quiet_end}"
-        if preference.quiet_enabled
-        else "Uit",
+        tasks=tasks,
         categories="Alle" if muted == 0 else f"{total - muted} van {total}",
     )
 
@@ -265,23 +250,6 @@ def save_tasks(db: Session, user: User, form: FormData) -> ReminderPreference:
             "task_days_before": days_before,
             "task_late_daily": _checked(form, "task_late_daily"),
         },
-    )
-
-
-def save_quiet(db: Session, user: User, form: FormData) -> ReminderPreference:
-    errors: dict[str, str] = {}
-    values: dict[str, str] = {}
-    for name in ("quiet_start", "quiet_end"):
-        try:
-            values[name] = format_time(parse_time(form.get_str(name)))
-        except ValueError:
-            errors[name] = "Vul een geldige tijd in (uu:mm)."
-    if not errors and values["quiet_start"] == values["quiet_end"]:
-        errors["quiet_end"] = "Begin en einde mogen niet gelijk zijn."
-    if errors:
-        raise ReminderFormError(errors)
-    return _save(
-        db, user, "quiet", {"quiet_enabled": _checked(form, "quiet_enabled"), **values}
     )
 
 

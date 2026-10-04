@@ -15,7 +15,7 @@ from app.models import (
     ReminderPreference,
     User,
 )
-from app.reminder_scheduler import Slot, due_slots, run, send_time, task_reason
+from app.reminder_scheduler import Slot, due_slots, run, task_reason
 from tests.factories import make_category, make_task, make_user
 from tests.push_helpers import Browser
 
@@ -111,30 +111,25 @@ def test_three_slots_have_their_own_index(db: Session, user: User) -> None:
     assert slots == [Slot(TODAY, "19:00", 2)]
 
 
-def test_quiet_hours_shift_to_end(db: Session, user: User) -> None:
-    preference = reminders.get(db, user)  # stil 22:00–07:00
-    assert send_time(preference, datetime(2026, 10, 3, 23, 0)) == datetime(
-        2026, 10, 4, 7, 0
-    )
-    assert send_time(preference, datetime(2026, 10, 3, 6, 0)) == datetime(
-        2026, 10, 3, 7, 0
-    )
-    assert send_time(preference, datetime(2026, 10, 3, 8, 0)) == datetime(
-        2026, 10, 3, 8, 0
-    )
-
-
-def test_slot_in_quiet_hours_over_midnight_keeps_its_day(
-    db: Session, user: User
-) -> None:
+def test_no_quiet_hours_late_and_early_slots(db: Session, user: User) -> None:
+    """Geen stille uren: een tijdstip om 23:00 of 06:00 gaat gewoon dan weg."""
     preference = reminders.get(db, user)
-    next_morning = datetime(2026, 10, 4, 7, 0)
-    assert list(due_slots(preference, next_morning, [time(23, 0)], {5})) == [
+    late = datetime(2026, 10, 3, 23, 0)
+    assert list(due_slots(preference, late, [time(23, 0)], None)) == [
         Slot(TODAY, "23:00", 0)
     ]
-    assert not list(
-        due_slots(preference, datetime(2026, 10, 3, 23, 0), [time(23, 0)], None)
-    )
+    early = datetime(2026, 10, 3, 6, 0)
+    assert list(due_slots(preference, early, [time(6, 0)], None)) == [
+        Slot(TODAY, "06:00", 0)
+    ]
+
+
+def test_slot_just_before_midnight_caught_up_after(db: Session, user: User) -> None:
+    preference = reminders.get(db, user)
+    after_midnight = datetime(2026, 10, 4, 0, 5)
+    assert list(due_slots(preference, after_midnight, [time(23, 55)], {5})) == [
+        Slot(TODAY, "23:55", 0)
+    ]
 
 
 # ---- Versturen en niet dubbel ----
@@ -309,13 +304,10 @@ def test_first_reminder_for_fixed_date_is_always_sent(
     assert outbox.for_user(user)[0]["body"] == "Over 60 dagen."
 
 
-def test_task_messages_use_first_time_and_quiet_hours(
-    db: Session, user: User, outbox: Outbox
-) -> None:
+def test_task_messages_use_first_time(db: Session, user: User, outbox: Outbox) -> None:
     prefs(db, user, task_on_day=True, update_enabled=False, update_times="06:00,12:00")
     make_task(db, name="Ramen", due=TODAY)
-    assert go(db, outbox, datetime(2026, 10, 3, 6, 0)) == 0  # stil tot 07:00
-    assert go(db, outbox, datetime(2026, 10, 3, 7, 0)) == 1
+    assert go(db, outbox, datetime(2026, 10, 3, 6, 0)) == 1  # geen stille uren
     assert go(db, outbox, datetime(2026, 10, 3, 12, 0)) == 0
 
 

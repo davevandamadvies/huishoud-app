@@ -7,7 +7,6 @@ volgens de voorkeuren van elke gebruiker verstuurd moet worden.
   een unieke sleutel (gebruiker, soort, onderwerp, dag, tijdstip).
 - Ingehaald: een tijdstip dat tijdens een herstart is gemist, gaat hooguit
   15 minuten later alsnog weg.
-- Stille uren: een tijdstip daarbinnen schuift naar het einde ervan.
 - Fouten worden gelogd en houden de app niet tegen.
 """
 
@@ -54,14 +53,6 @@ class Slot:
     index: int  # 0, 1 of 2: het hoeveelste tijdstip van die dag
 
 
-def send_time(preference: ReminderPreference, at: datetime) -> datetime:
-    """Tijdstip na het toepassen van de stille uren."""
-    if not reminders.is_quiet(preference, at.time()):
-        return at
-    end = datetime.combine(at.date(), reminders.parse_time(preference.quiet_end))
-    return end if end > at else end + timedelta(days=1)
-
-
 def due_slots(
     preference: ReminderPreference,
     now: datetime,
@@ -73,7 +64,7 @@ def due_slots(
         if weekdays is not None and day.weekday() not in weekdays:
             continue
         for index, moment in enumerate(times):
-            at = send_time(preference, datetime.combine(day, moment))
+            at = datetime.combine(day, moment)
             if at <= now < at + CATCH_UP:
                 yield Slot(day, reminders.format_time(moment), index)
 
