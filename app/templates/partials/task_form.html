@@ -103,6 +103,22 @@
       {% with field="owner_id" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
+    {% if vehicles or values.vehicle_id %}
+    <div class="field">
+      <label class="label" for="vehicle_id">Voertuig <span class="label-note">(optioneel)</span></label>
+      <select class="input" id="vehicle_id" name="vehicle_id"{{ invalid("vehicle_id") }}>
+        <option value="">Geen</option>
+        {% for v in vehicles %}
+        <option value="{{ v.id }}"{% if values.vehicle_id == v.id|string %} selected{% endif %}>{{ v.name }}</option>
+        {% endfor %}
+        {% if task and task.vehicle and task.vehicle.is_archived %}
+        <option value="{{ task.vehicle.id }}" selected>{{ task.vehicle.name }} (gearchiveerd)</option>
+        {% endif %}
+      </select>
+      {% with field="vehicle_id" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+    {% endif %}
+
     {% if request.state.competition %}
     <div class="field">
       <label class="label" for="default_points">Punten <span class="label-note">(optioneel)</span></label>

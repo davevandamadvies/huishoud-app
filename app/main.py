@@ -19,6 +19,7 @@ from app import (
     reminder_pages,
     reminder_scheduler,
     task_pages,
+    vehicle_pages,
 )
 from app.bootstrap import run_bootstrap
 from app.db import new_session
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(planning_pages.router)
     app.include_router(push_pages.router)
     app.include_router(reminder_pages.router)
+    app.include_router(vehicle_pages.router)
 
     @app.exception_handler(auth.NotAuthenticated)
     def _not_authenticated(request: Request, _exc: Exception) -> Response:

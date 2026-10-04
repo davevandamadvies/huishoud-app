@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 
 from app import audit
 from app.db import new_session
-from app.models import Category, Task
+from app.models import Category, Task, Vehicle
 from app.recurrence import IntervalUnit, RecurrenceType
-from app.seed_data import TASKS
+from app.seed_data import AUTO_CATEGORY, TASKS
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +34,19 @@ def seed_tasks(db: Session) -> tuple[int, int]:
     existing = {n.lower() for n in db.scalars(select(func.lower(Task.name)))}
 
     added: list[str] = []
+    vehicle: Vehicle | None = None
     for item in TASKS:
         if item.name.lower() in existing:
             continue
+        if item.category == AUTO_CATEGORY and vehicle is None:
+            vehicle = db.scalar(select(Vehicle).where(Vehicle.name == "Auto"))
+            if vehicle is None:
+                vehicle = Vehicle(name="Auto")
+                db.add(vehicle)
         db.add(
             Task(
                 name=item.name,
+                vehicle=vehicle if item.category == AUTO_CATEGORY else None,
                 category=categories[item.category],
                 recurrence_type=RecurrenceType(item.recurrence),
                 interval_every=item.every,

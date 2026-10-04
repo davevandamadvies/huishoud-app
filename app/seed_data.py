@@ -30,6 +30,8 @@ def months(first: int, last: int) -> tuple[int, ...]:
     return tuple(range(first, 13)) + tuple(range(1, last + 1))
 
 
+AUTO_CATEGORY = "Auto"
+
 S, H, A, T, P, TE = (
     "Schoonmaak",
     "Huis & installaties",

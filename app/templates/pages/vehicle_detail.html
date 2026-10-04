@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  {% with back_href="/voertuigen", back_label="Voertuigen" %}{% include "partials/back_link.html" %}{% endwith %}
+  <h1 class="page-title">{{ vehicle.name }}</h1>
+</header>
+{% include "partials/vehicle_form.html" %}
+<section>
+  <h2 class="section-title">Kilometerstanden</h2>
+  {% if readings %}
+  <ul class="list">
+    {% for r in readings %}
+    <li class="list-item">
+      <div class="item-body">
+        <div class="item-title">{{ format_km(r.km) }}</div>
+        <div class="item-meta">{{ r.read_on | dutch_date }}{% if r.user %} · {{ r.user.display_name }}{% endif %}</div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-state">Nog geen kilometerstanden.</p>
+  {% endif %}
+</section>
+{% endblock %}

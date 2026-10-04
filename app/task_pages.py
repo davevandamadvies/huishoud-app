@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import categories, completion, planning, settings_store, tasks
+from app import categories, completion, planning, settings_store, tasks, vehicles
 from app import points as app_points
 from app.auth import CurrentUser, current_user
 from app.dates import due_label, dutch_date, plan_label, today
@@ -118,6 +118,7 @@ def _form_context(
         error=error,
         categories=categories.list_categories(db),
         owners=owners,
+        vehicles=vehicles.list_vehicles(db),
         recurrence_labels=RECURRENCE_LABELS,
         unit_labels=UNIT_LABELS,
         page_title=task.name if task else "Nieuwe taak",
@@ -139,6 +140,7 @@ def _values_from_task(db: Session, task: Task) -> dict:
         "default_points": str(task.default_points or ""),
         "notes": task.notes or "",
         "first_reminder_days": str(task.first_reminder_days or ""),
+        "vehicle_id": str(task.vehicle_id or ""),
         "next_date": pending.due_date.isoformat()
         if pending and pending.due_date
         else "",
@@ -253,7 +255,9 @@ def _sheet(
     after: str = "event",
     error: str | None = None,
     points: int | None = None,
+    km: str = "",
 ) -> HTMLResponse:
+    last_km = vehicles.latest(db, task.vehicle) if task.vehicle else None
     context = _context(
         db,
         user,
@@ -267,6 +271,9 @@ def _sheet(
         preview=completion.preview_next(db, task, completed_on),
         max_days_back=completion.MAX_DAYS_BACK,
         points=points,
+        km=km,
+        last_km=last_km,
+        format_km=vehicles.format_km,
     )
     return templates.TemplateResponse(request, "partials/complete_sheet.html", context)
 
@@ -316,11 +323,13 @@ def complete(
     raw_points = form.get_str("points")
     points = int(raw_points) if raw_points.isdigit() else None
     after = "refresh" if form.get_str("after") == "refresh" else "event"
+    raw_km = form.get_str("km")
     try:
         completed_on = date.fromisoformat(form.get_str("completed_on"))
     except ValueError:
         completed_on = today()
     try:
+        km = vehicles.parse_km(raw_km) if raw_km and task.vehicle else None
         completion.complete(
             db,
             user,
@@ -329,8 +338,9 @@ def complete(
             completed_on=completed_on,
             note=note,
             points=points,
+            km=km,
         )
-    except completion.CompletionError as exc:
+    except (completion.CompletionError, vehicles.VehicleError) as exc:
         db.rollback()
         return _sheet(
             request,
@@ -343,6 +353,7 @@ def complete(
             after=after,
             error=str(exc),
             points=points,
+            km=raw_km,
         )
     return _changed(after)
 

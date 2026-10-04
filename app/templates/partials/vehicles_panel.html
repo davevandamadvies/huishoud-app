@@ -1,0 +1,52 @@
+{% include "partials/messages.html" %}
+{% for card in cards %}
+{% set v = card.vehicle %}
+<section class="card stack">
+  <div class="card-row">
+    <div>
+      <h2 class="item-title"><a class="title-link" href="/voertuigen/{{ v.id }}">{{ v.name }}<svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg></a></h2>
+      <div class="item-meta">
+        {% if card.latest %}{{ format_km(card.latest.km) }} · {{ card.latest.read_on | dutch_date }}{% else %}Nog geen kilometerstand{% endif %}
+        {% if card.per_day is not none %} · ≈ {{ card.per_day | round | int }} km per dag{% endif %}
+      </div>
+    </div>
+  </div>
+  <form class="form" hx-post="/voertuigen/{{ v.id }}/stand" hx-target="#vehicles-panel" hx-swap="innerHTML">
+    <div class="inline-fields">
+      <div class="field">
+        <label class="label" for="km-{{ v.id }}">Nieuwe stand</label>
+        <input class="input input-km" id="km-{{ v.id }}" name="km" inputmode="numeric" autocomplete="off" required{% if card.latest %} placeholder="{{ card.latest.km }}"{% endif %}{% if error_vehicle == v.id %} aria-invalid="true"{% endif %}>
+      </div>
+      <div class="field">
+        <label class="label" for="read-on-{{ v.id }}">Datum</label>
+        <input class="input" id="read-on-{{ v.id }}" name="read_on" type="date" value="{{ today.isoformat() }}" max="{{ today.isoformat() }}">
+      </div>
+    </div>
+    <button class="button button-outline" type="submit">Stand opslaan</button>
+  </form>
+</section>
+{% else %}
+<p class="empty-state"><strong>Nog geen voertuigen</strong>Voeg je auto toe om onderhoud op kilometers bij te houden.</p>
+{% endfor %}
+
+<section>
+  <h2 class="section-title">Voertuig toevoegen</h2>
+  <form class="card form" hx-post="/voertuigen" hx-target="#vehicles-panel" hx-swap="innerHTML">
+    <div class="field">
+      <label class="label" for="vehicle-name">Naam</label>
+      <input class="input" id="vehicle-name" name="name" maxlength="50" required placeholder="Bijv. Auto" value="{{ name or '' }}">
+    </div>
+    <button class="button button-outline" type="submit">Toevoegen</button>
+  </form>
+</section>
+
+{% if archived %}
+<section>
+  <h2 class="section-title">Archief</h2>
+  <ul class="list">
+    {% for v in archived %}
+    <li><a class="list-item list-link" href="/voertuigen/{{ v.id }}"><span class="item-title">{{ v.name }}</span></a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
