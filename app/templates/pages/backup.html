@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  {% with back_href="/meer", back_label="Instellingen" %}{% include "partials/back_link.html" %}{% endwith %}
+  <h1 class="page-title">Back-up</h1>
+</header>
+{% if not enabled %}
+<p class="empty-state"><strong>Niet beschikbaar</strong>Back-ups werken alleen met een SQLite-database.</p>
+{% else %}
+<section>
+  <p class="hint">Elke nacht om 03:15 maakt de app een kopie van de database. De laatste {{ keep }} blijven bewaard op de NAS. Bewaar af en toe een kopie op een andere plek.</p>
+  <div class="button-row">
+    <a class="button" href="/beheer/back-up/download" download>Nu downloaden</a>
+  </div>
+</section>
+<section>
+  <h2 class="section-title">Nachtelijke back-ups</h2>
+  {% if backups %}
+  <ul class="list">
+    {% for b in backups %}
+    <li class="list-item">
+      <div class="item-body">
+        <div class="item-title">{{ b.day | dutch_date }}</div>
+        <div class="item-meta">{{ human_size(b.size) }}</div>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-state">Nog geen back-ups. De eerste komt vannacht.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

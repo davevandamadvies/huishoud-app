@@ -125,6 +125,31 @@ Europe/Amsterdam); er is geen cronjob of extra container nodig. De container
 moet dus blijven draaien. Na een herstart haalt de app een gemist tijdstip
 hooguit 15 minuten later in.
 
+## 7. Back-up en terugzetten
+
+De app maakt elke nacht om 03:15 een kopie van de database in `BACKUP_DIR`
+(standaard `/data/backups`, op hetzelfde volume) en bewaart de laatste
+`BACKUP_KEEP` (standaard 14). Stond de app om 03:15 uit, dan volgt de back-up
+bij de volgende start. Een verse kopie downloaden kan als beheerder via
+Instellingen → Back-up.
+
+Een back-up op dezelfde schijf beschermt tegen fouten in de app, niet tegen
+een kapotte NAS: kopieer `/data/backups` regelmatig naar een andere plek
+(bijv. met de back-upfunctie van de NAS).
+
+Terugzetten:
+
+```sh
+docker compose stop huishoud
+cp /pad/naar/data/backups/huishoud-JJJJ-MM-DD.db /pad/naar/data/huishoud.db
+rm -f /pad/naar/data/huishoud.db-wal /pad/naar/data/huishoud.db-shm
+docker compose run --rm huishoud alembic upgrade head
+docker compose start huishoud
+```
+
+Let op de eigenaar van het bestand (uid 10001), anders kan de app er niet in
+schrijven: `chown 10001:10001 /pad/naar/data/huishoud.db`.
+
 ## Controle na het uitrollen
 
 - `https://huishoud.<domein>/healthz` geeft `{"status":"ok"}`.

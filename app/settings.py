@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     oidc_client_secret: SecretStr | None = None
     oidc_scopes: str = "openid profile"
 
+    # Back-up van de database (alleen SQLite): elke nacht een kopie hierin.
+    backup_dir: str = "/data/backups"
+    backup_keep: int = Field(default=14, ge=1, le=365)
+
     # Web Push (VAPID). Zonder sleutels staan meldingen uit.
     vapid_public_key: str | None = None
     vapid_private_key: SecretStr | None = None

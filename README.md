@@ -79,6 +79,8 @@ toe aan `/etc/hosts`: `127.0.0.1 huishoud.localhost auth.huishoud.localhost`.
 | `OIDC_CLIENT_ID` | – | Client-ID van de app in Authelia |
 | `OIDC_CLIENT_SECRET` | – | Client-secret (geheim, alleen in `.env`) |
 | `OIDC_SCOPES` | `openid profile` | Gevraagde scopes |
+| `BACKUP_DIR` | `/data/backups` | Map voor de nachtelijke back-ups (alleen SQLite) |
+| `BACKUP_KEEP` | `14` | Aantal nachtelijke back-ups dat bewaard blijft |
 | `VAPID_PUBLIC_KEY` | – | Publieke sleutel voor meldingen (Web Push) |
 | `VAPID_PRIVATE_KEY` | – | Privésleutel voor meldingen (geheim, alleen in `.env`) |
 | `VAPID_SUBJECT` | – | Contactadres voor de pushdienst, bijv. `mailto:jij@example.com` |

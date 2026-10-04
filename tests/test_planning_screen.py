@@ -15,8 +15,10 @@ def plan(db: Session, user: User, task, day: date, at=None, owners=()) -> None: 
 
 
 def test_view_week_and_day(db: Session, user: User) -> None:
-    day = today() + timedelta(days=7)  # ruim in de toekomst, binnen een jaar
-    monday = day - timedelta(days=day.weekday())
+    # Woensdag van volgende week: nooit gelijk aan de zondag ("Andere dag").
+    next_week = today() + timedelta(days=7)
+    monday = next_week - timedelta(days=next_week.weekday())
+    day = monday + timedelta(days=2)
     plan(db, user, make_task(db, name="Middag"), day, time(14, 0))
     plan(db, user, make_task(db, name="Ochtend"), day, time(9, 0))
     plan(db, user, make_task(db, name="Zonder tijd"), day)
