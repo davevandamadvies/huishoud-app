@@ -10,7 +10,7 @@ from app import audit, categories, vehicles
 from app.db import utcnow
 from app.forms import FormData
 from app.models import Category, Occurrence, OccurrenceStatus, Task, User, Vehicle
-from app.recurrence import IntervalUnit, RecurrenceType
+from app.recurrence import IntervalUnit, RecurrenceType, format_months, into_season
 
 PENDING = (OccurrenceStatus.OPEN, OccurrenceStatus.PLANNED)
 FINISHED = (OccurrenceStatus.DONE, OccurrenceStatus.SKIPPED)
@@ -42,6 +42,7 @@ class TaskInput:
     first_reminder_days: int | None = None
     vehicle_id: int | None = None
     km_interval: int | None = None
+    season_months: str | None = None
 
     def audit_dict(self) -> dict:
         return {
@@ -56,6 +57,7 @@ class TaskInput:
             "first_reminder_days": self.first_reminder_days,
             "vehicle_id": self.vehicle_id,
             "km_interval": self.km_interval,
+            "season_months": self.season_months,
         }
 
 
@@ -146,6 +148,11 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         if km_interval is None or not 100 <= km_interval <= 500_000:
             errors["km_interval"] = "Kilometers: een heel getal van 100 tot 500.000."
 
+    season = {
+        int(m) for m in form.get_all("season") if m.isdigit() and 1 <= int(m) <= 12
+    }
+    season_months = format_months(season)
+
     notes = form.get_str("notes") or None
     if notes and len(notes) > 2000:
         errors["notes"] = "Notities mogen maximaal 2000 tekens zijn."
@@ -173,6 +180,7 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         first_reminder_days=first_reminder,
         vehicle_id=vehicle_id,
         km_interval=km_interval,
+        season_months=season_months,
     )
 
 
@@ -245,6 +253,7 @@ def _apply(task: Task, data: TaskInput) -> None:
     task.first_reminder_days = data.first_reminder_days
     task.vehicle_id = data.vehicle_id
     task.km_interval = data.km_interval
+    task.season_months = data.season_months
 
 
 def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
@@ -260,6 +269,15 @@ def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
             pending.due_date = next_date
     else:  # gepland: de plandatum blijft leidend, alleen de vervaldatum wijzigt
         pending.due_date = next_date
+
+
+def _shift_into_season(db: Session, task: Task) -> None:
+    """Nieuw seizoen: een open uitvoering buiten het seizoen schuift mee."""
+    pending = pending_occurrence(db, task)
+    if pending is None or pending.status != OccurrenceStatus.OPEN:
+        return
+    if pending.due_date is not None:
+        pending.due_date = into_season(pending.due_date, task.season)
 
 
 def _time_due(occurrence: Occurrence | None) -> date | None:
@@ -305,9 +323,12 @@ def update(db: Session, actor: User, task: Task, data: TaskInput) -> None:
     pending = pending_occurrence(db, task)
     old = _audit_snapshot(task, _time_due(pending))
     old_interval = task.km_interval
+    old_season = task.season_months
     _apply(task, data)
     _set_next_date(db, task, data.next_date)
     _sync_km(db, task, data.next_date, old_interval)
+    if task.season_months != old_season:
+        _shift_into_season(db, task)
     new = data.audit_dict() | {"next_date": _iso(data.next_date)}
     if old != new:
         audit.record(
@@ -386,6 +407,7 @@ def _audit_snapshot(task: Task, next_date: date | None) -> dict:
         "first_reminder_days": task.first_reminder_days,
         "vehicle_id": task.vehicle_id,
         "km_interval": task.km_interval,
+        "season_months": task.season_months,
         "next_date": _iso(next_date),
     }
 

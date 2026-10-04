@@ -15,7 +15,15 @@ from app.dates import due_label, dutch_date, plan_label, today
 from app.db import get_db
 from app.forms import Form, FormData
 from app.models import Occurrence, OccurrenceStatus, Role, Task, User, UserStatus
-from app.recurrence import IntervalUnit, RecurrenceType, describe
+from app.recurrence import (
+    MONTH_ABBR,
+    IntervalUnit,
+    RecurrenceType,
+    describe,
+    describe_season,
+    in_season,
+    into_season,
+)
 from app.templating import templates
 
 router = APIRouter(
@@ -119,6 +127,7 @@ def _form_context(
         categories=categories.list_categories(db),
         owners=owners,
         vehicles=vehicles.list_vehicles(db),
+        month_abbr=MONTH_ABBR,
         recurrence_labels=RECURRENCE_LABELS,
         unit_labels=UNIT_LABELS,
         page_title=task.name if task else "Nieuwe taak",
@@ -145,6 +154,7 @@ def _values_from_task(db: Session, task: Task) -> dict:
         if pending and (pending.time_due_date or pending.due_date)
         else "",
         "km_interval": str(task.km_interval or ""),
+        "season": [str(m) for m in sorted(task.season or ())],
     }
 
 
@@ -173,7 +183,7 @@ def create(request: Request, user: CurrentUser, db: DB, form: Form) -> Response:
     try:
         data = tasks.parse_form(db, form)
     except tasks.TaskFormError as exc:
-        values = {k: form.get_str(k) for k in form}
+        values = {k: form.get_str(k) for k in form} | {"season": form.get_all("season")}
         context = _form_context(db, user, task=None, values=values, errors=exc.errors)
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     tasks.create(db, user, data)
@@ -197,7 +207,7 @@ def update(
     try:
         data = tasks.parse_form(db, form)
     except tasks.TaskFormError as exc:
-        values = {k: form.get_str(k) for k in form}
+        values = {k: form.get_str(k) for k in form} | {"season": form.get_all("season")}
         context = _form_context(db, user, task=task, values=values, errors=exc.errors)
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     tasks.update(db, user, task, data)
@@ -376,6 +386,32 @@ def _changed(after: str) -> HTMLResponse:
     return HTMLResponse("", headers=headers)
 
 
+def _season_warning(task: Task, raw_date: str) -> str | None:
+    """Waarschuwing als de gekozen datum buiten het seizoen valt."""
+    try:
+        day = date.fromisoformat(raw_date)
+    except (TypeError, ValueError):
+        return None
+    if in_season(day, task.season):
+        return None
+    return (
+        f"Let op: buiten het seizoen ({describe_season(task.season)}). "
+        "Inplannen kan wel."
+    )
+
+
+@router.get("/{task_id}/inplannen/seizoen")
+def plan_season_warning(
+    request: Request, task_id: int, user: CurrentUser, db: DB, planned_date: str = ""
+) -> HTMLResponse:
+    task = _get(db, task_id)
+    return templates.TemplateResponse(
+        request,
+        "partials/season_warning.html",
+        {"season_warning": _season_warning(task, planned_date)},
+    )
+
+
 def _plan_sheet(
     request: Request,
     db: Session,
@@ -396,6 +432,7 @@ def _plan_sheet(
         after=after,
         error=error,
         planned=pending if pending and pending.planned_date else None,
+        season_warning=_season_warning(task, values.get("planned_date", "")),
         min_date=today().isoformat(),
         max_date=(today() + timedelta(days=planning.MAX_DAYS_AHEAD)).isoformat(),
     )
@@ -426,7 +463,8 @@ def plan_sheet(
         try:
             day = date.fromisoformat(datum)
         except ValueError:
-            day = today() + timedelta(days=1)
+            # Voorstel: morgen, of het begin van het seizoen.
+            day = into_season(today() + timedelta(days=1), task.season)
         values = {
             "planned_date": day.isoformat(),
             "planned_time": "",

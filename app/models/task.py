@@ -19,7 +19,14 @@ from app.db import Base, UTCDateTime, utcnow
 from app.models.category import Category
 from app.models.user import User
 from app.models.vehicle import Vehicle
-from app.recurrence import IntervalUnit, RecurrenceType, Rule, describe
+from app.recurrence import (
+    IntervalUnit,
+    RecurrenceType,
+    Rule,
+    describe,
+    describe_season,
+    parse_months,
+)
 
 
 def _enum(enum_cls: type[StrEnum], name: str) -> Enum:
@@ -72,6 +79,8 @@ class Task(Base):
     )
     # Of elke zoveel km (wat het eerst komt); alleen met een voertuig.
     km_interval: Mapped[int | None] = mapped_column(Integer)
+    # Actieve maanden, bijv. "3,4,5,6,7,8,9,10"; leeg = het hele jaar.
+    season_months: Mapped[str | None] = mapped_column(String(30))
     notes: Mapped[str | None] = mapped_column(Text)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
@@ -92,11 +101,18 @@ class Task(Base):
         return self.archived_at is not None
 
     @property
+    def season(self) -> frozenset[int] | None:
+        return parse_months(self.season_months)
+
+    @property
     def recurrence_text(self) -> str:
-        """Bijv. 'Jaarlijks of elke 15.000 km'."""
+        """Bijv. 'Jaarlijks of elke 15.000 km' of 'Elke 7 dagen · mrt–okt'."""
         text = describe(self.rule)
         if self.km_interval and self.vehicle_id:
             text += f" of elke {self.km_interval:,} km".replace(",", ".")
+        season = describe_season(self.season)
+        if season:
+            text += f" · {season}"
         return text
 
 

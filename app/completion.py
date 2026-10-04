@@ -30,7 +30,8 @@ class CompletionResult:
 def preview_next(db: Session, task: Task, completed_on: date) -> date | None:
     """Wat wordt de volgende vervaldatum als de taak nu wordt afgevinkt?"""
     pending = tasks.pending_occurrence(db, task)
-    return next_due(task.rule, completed_on, pending.due_date if pending else None)
+    previous = pending.due_date if pending else None
+    return next_due(task.rule, completed_on, previous, task.season)
 
 
 def complete(
@@ -95,7 +96,7 @@ def complete(
         occurrence.km = km
     db.flush()
 
-    next_date = next_due(task.rule, completed_on, previous_due)
+    next_date = next_due(task.rule, completed_on, previous_due, task.season)
     next_occurrence = None
     if next_date is not None:
         next_occurrence = Occurrence(task_id=task.id, due_date=next_date)

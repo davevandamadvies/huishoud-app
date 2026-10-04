@@ -17,13 +17,16 @@
       <div class="field">
         <label class="label" for="planned_date">Datum</label>
         <input class="input" id="planned_date" name="planned_date" type="date" required
-               min="{{ min_date }}" max="{{ max_date }}" value="{{ values.planned_date }}" data-autofocus>
+               min="{{ min_date }}" max="{{ max_date }}" value="{{ values.planned_date }}" data-autofocus
+               {% if task.season %}hx-get="/taken/{{ task.id }}/inplannen/seizoen" hx-trigger="change" hx-target="#season-warning" hx-swap="outerHTML" hx-include="this"{% endif %}>
       </div>
       <div class="field field-narrow">
         <label class="label" for="planned_time">Tijd <span class="label-note">(optioneel)</span></label>
         <input class="input" id="planned_time" name="planned_time" type="time" value="{{ values.planned_time }}">
       </div>
     </div>
+
+    {% include "partials/season_warning.html" %}
 
     <fieldset class="field">
       <legend class="label">Wie doet het? <span class="label-note">(geen keuze = iedereen)</span></legend>

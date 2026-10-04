@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app import planning, scores, settings_store
 from app.dates import TIMEZONE
 from app.models import Occurrence, OccurrenceStatus, Task, User
+from app.recurrence import in_season
 from app.today_view import week_bounds
 
 PENDING = (OccurrenceStatus.OPEN, OccurrenceStatus.PLANNED)
@@ -230,7 +231,11 @@ def update_message(
     def mine(o: Occurrence) -> bool:
         return user in planning.responsible(o)
 
-    relevant = [o for o in pending if o.task.category_id not in muted]
+    relevant = [
+        o
+        for o in pending
+        if o.task.category_id not in muted and in_season(today, o.task.season)
+    ]
     if only_mine:
         relevant = [o for o in relevant if mine(o)]
     horizon = today + timedelta(days=lookahead)
