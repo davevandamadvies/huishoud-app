@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app import audit, settings_store, tasks
+from app import audit, settings_store, tasks, vehicles
 from app import points as app_points
 from app.dates import today
 from app.db import utcnow
@@ -42,6 +42,7 @@ def complete(
     completed_on: date | None = None,
     note: str | None = None,
     points: int | None = None,
+    km: int | None = None,
 ) -> CompletionResult:
     if task.is_archived:
         raise CompletionError("Deze taak staat in het archief.")
@@ -82,6 +83,16 @@ def complete(
     occurrence.note = note
     occurrence.performers = [Performer(user_id=u.id) for u in performers]
     app_points.distribute(occurrence, points)
+    if km is not None and task.vehicle is not None:
+        last = vehicles.latest(db, task.vehicle)
+        if last is None or (last.read_on, last.km) != (completed_on, km):
+            try:
+                vehicles.add_reading(
+                    db, actor, task.vehicle, km, completed_on, commit=False
+                )
+            except vehicles.VehicleError as exc:
+                raise CompletionError(str(exc)) from exc
+        occurrence.km = km
     db.flush()
 
     next_date = next_due(task.rule, completed_on, previous_due)
@@ -102,6 +113,7 @@ def complete(
             "completed_on": completed_on.isoformat(),
             "performers": [u.id for u in performers],
             "points": points,
+            "km": occurrence.km,
             "previous_due": previous_due.isoformat() if previous_due else None,
             "next_due": next_date.isoformat() if next_date else None,
         },

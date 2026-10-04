@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  {% with back_href="/meer", back_label="Instellingen" %}{% include "partials/back_link.html" %}{% endwith %}
+  <h1 class="page-title">Voertuigen</h1>
+</header>
+<div id="vehicles-panel" class="stack" hx-disinherit="*">
+  {% include "partials/vehicles_panel.html" %}
+</div>
+{% endblock %}

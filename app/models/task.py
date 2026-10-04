@@ -18,6 +18,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db import Base, UTCDateTime, utcnow
 from app.models.category import Category
 from app.models.user import User
+from app.models.vehicle import Vehicle
 from app.recurrence import IntervalUnit, RecurrenceType, Rule
 
 
@@ -65,6 +66,10 @@ class Task(Base):
     default_points: Mapped[int | None] = mapped_column(Integer)
     # Alleen bij een vaste datum: eerste herinnering zoveel dagen vooraf.
     first_reminder_days: Mapped[int | None] = mapped_column(Integer)
+    # Taak voor een voertuig (bijv. olie verversen); fase 5.
+    vehicle_id: Mapped[int | None] = mapped_column(
+        ForeignKey("vehicles.id", ondelete="SET NULL")
+    )
     notes: Mapped[str | None] = mapped_column(Text)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
@@ -74,6 +79,7 @@ class Task(Base):
 
     category: Mapped[Category] = relationship()
     owner: Mapped[User | None] = relationship()
+    vehicle: Mapped[Vehicle | None] = relationship()
 
     @property
     def rule(self) -> Rule:
@@ -120,6 +126,7 @@ class Occurrence(Base):
     completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     note: Mapped[str | None] = mapped_column(Text)
     cost_cents: Mapped[int | None] = mapped_column(Integer)
+    km: Mapped[int | None] = mapped_column(Integer)  # kilometerstand bij afvinken
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     task: Mapped[Task] = relationship()

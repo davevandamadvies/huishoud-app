@@ -14,6 +14,7 @@ from app import (
     scores,
     settings_store,
     today_view,
+    vehicles,
 )
 from app.auth import CurrentUser, current_user
 from app.dates import due_label, plan_label, today, when_label
@@ -44,6 +45,8 @@ def _today_context(db: Session, user: User) -> dict:
         "due_label": due_label,
         "plan_label": plan_label,
         "responsible": planning.responsible,
+        "vehicle_reminders": vehicles.needing_update(db, day),
+        "format_km": vehicles.format_km,
     }
 
 
@@ -129,5 +132,6 @@ def more_page(request: Request, user: CurrentUser, db: DB) -> HTMLResponse:
             "category_count": len(categories.list_categories(db)),
             "reminders": reminders.summary(db, user),
             "device_count": len(push.subscriptions_for(db, user)),
+            "vehicle_count": len(vehicles.list_vehicles(db)),
         },
     )

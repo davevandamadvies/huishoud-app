@@ -34,6 +34,14 @@
              hx-get="/taken/{{ task.id }}/afronden/voorbeeld" hx-trigger="change" hx-target="#next-preview" hx-swap="outerHTML" hx-include="this">
     </div>
 
+    {% if task.vehicle %}
+    <div class="field">
+      <label class="label" for="km">Kilometerstand {{ task.vehicle.name }} <span class="label-note">(optioneel)</span></label>
+      <input class="input input-number input-km" id="km" name="km" inputmode="numeric" autocomplete="off" value="{{ km }}"{% if last_km %} placeholder="{{ last_km.km }}"{% endif %}>
+      {% if last_km %}<p class="hint">Laatst bekend: {{ format_km(last_km.km) }} ({{ last_km.read_on | dutch_date }})</p>{% endif %}
+    </div>
+    {% endif %}
+
     <div class="field">
       <label class="label" for="note">Notitie</label>
       <input class="input" id="note" name="note" maxlength="500" placeholder="Optioneel" value="{{ note }}">

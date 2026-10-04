@@ -5,6 +5,16 @@
   <h1 class="page-title">Vandaag</h1>
 </header>
 
+{% for r in vehicle_reminders %}
+<a class="card card-row card-link" href="/voertuigen">
+  <div>
+    <div class="item-title">Kilometerstand {{ r.vehicle.name }} bijwerken</div>
+    <div class="item-meta">{% if r.last %}Laatste stand {{ format_km(r.last.km) }} op {{ r.last.read_on | dutch_date }}{% else %}Nog geen stand ingevoerd{% endif %}</div>
+  </div>
+  <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+</a>
+{% endfor %}
+
 {% include "partials/today_lists.html" %}
 
 <a class="fab" href="/taken/nieuw" aria-label="Taak toevoegen">

@@ -17,6 +17,7 @@ from app.models.task import (
     Task,
 )
 from app.models.user import Role, User, UserSession, UserStatus
+from app.models.vehicle import OdometerReading, Vehicle
 
 __all__ = [
     "AuditLog",
@@ -24,6 +25,7 @@ __all__ = [
     "Occurrence",
     "OccurrenceOwner",
     "OccurrenceStatus",
+    "OdometerReading",
     "Performer",
     "PushSubscription",
     "ReminderLog",
@@ -35,4 +37,5 @@ __all__ = [
     "User",
     "UserSession",
     "UserStatus",
+    "Vehicle",
 ]

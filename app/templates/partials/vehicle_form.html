@@ -1,0 +1,12 @@
+<div id="vehicle-form" class="stack">
+  {% include "partials/messages.html" %}
+  {% if vehicle.is_archived %}<p class="alert alert-info" role="status">Dit voertuig staat in het archief.</p>{% endif %}
+  <form class="card form" hx-post="/voertuigen/{{ vehicle.id }}" hx-target="#vehicle-form" hx-swap="outerHTML">
+    <div class="field">
+      <label class="label" for="vehicle-name">Naam</label>
+      <input class="input" id="vehicle-name" name="name" maxlength="50" required value="{{ vehicle.name }}">
+    </div>
+    <button class="button" type="submit">Opslaan</button>
+  </form>
+  <button class="button button-outline" type="button" hx-post="/voertuigen/{{ vehicle.id }}/archiveren" hx-target="#vehicle-form" hx-swap="outerHTML">{{ "Terugzetten" if vehicle.is_archived else "Archiveren" }}</button>
+</div>

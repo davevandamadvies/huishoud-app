@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 from app import audit, categories
 from app.db import utcnow
 from app.forms import FormData
-from app.models import Category, Occurrence, OccurrenceStatus, Task, User
+from app.models import Category, Occurrence, OccurrenceStatus, Task, User, Vehicle
 from app.recurrence import IntervalUnit, RecurrenceType
 
 PENDING = (OccurrenceStatus.OPEN, OccurrenceStatus.PLANNED)
@@ -40,6 +40,7 @@ class TaskInput:
     notes: str | None
     next_date: date | None
     first_reminder_days: int | None = None
+    vehicle_id: int | None = None
 
     def audit_dict(self) -> dict:
         return {
@@ -52,6 +53,7 @@ class TaskInput:
             "default_points": self.default_points,
             "notes": self.notes,
             "first_reminder_days": self.first_reminder_days,
+            "vehicle_id": self.vehicle_id,
         }
 
 
@@ -127,6 +129,14 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
                 "Eerste herinnering: een heel getal van 1 tot 365 dagen, of leeg."
             )
 
+    vehicle_id: int | None = None
+    raw_vehicle = form.get_str("vehicle_id")
+    if raw_vehicle:
+        vehicle_id = _int(raw_vehicle)
+        vehicle = db.get(Vehicle, vehicle_id) if vehicle_id is not None else None
+        if vehicle is None:
+            errors["vehicle_id"] = "Kies een voertuig of geen."
+
     notes = form.get_str("notes") or None
     if notes and len(notes) > 2000:
         errors["notes"] = "Notities mogen maximaal 2000 tekens zijn."
@@ -152,6 +162,7 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         notes=notes,
         next_date=next_date,
         first_reminder_days=first_reminder,
+        vehicle_id=vehicle_id,
     )
 
 
@@ -222,6 +233,7 @@ def _apply(task: Task, data: TaskInput) -> None:
     task.default_points = data.default_points
     task.notes = data.notes
     task.first_reminder_days = data.first_reminder_days
+    task.vehicle_id = data.vehicle_id
 
 
 def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
@@ -334,6 +346,7 @@ def _audit_snapshot(task: Task, next_date: date | None) -> dict:
         "default_points": task.default_points,
         "notes": task.notes,
         "first_reminder_days": task.first_reminder_days,
+        "vehicle_id": task.vehicle_id,
         "next_date": _iso(next_date),
     }
 
