@@ -1,0 +1,26 @@
+{# Staafgrafiek per periode. Verwacht: buckets, title, fmt (macro-naam: "count" of "euro") #}
+{% set width, items = bars(buckets) %}
+<figure class="chart">
+  <svg class="bar-chart" viewBox="0 -14 {{ width }} {{ chart_height + 30 }}" role="img" aria-labelledby="{{ chart_id }}-title">
+    <title id="{{ chart_id }}-title">{{ title }}</title>
+    <line class="chart-baseline" x1="0" y1="{{ chart_height }}" x2="{{ width }}" y2="{{ chart_height }}"></line>
+    {% for b in items %}
+    <g class="bar-group">
+      <title>{{ b.bucket.long }}: {{ (b.bucket.value | euro) if money else b.bucket.value }}</title>
+      <rect class="bar-hit" x="{{ b.label_x - 12 }}" y="-14" width="24" height="{{ chart_height + 14 }}"></rect>
+      {% if b.path %}<path class="bar" d="{{ b.path }}"></path>{% endif %}
+      {% if b.show_value %}<text class="bar-value" x="{{ b.label_x }}" y="{{ b.y - 4 }}" text-anchor="middle">{{ ('€' ~ (b.bucket.value // 100)) if money else b.bucket.value }}</text>{% endif %}
+      {% if items|length <= 12 or loop.index0 % 3 == 0 or loop.last %}<text class="bar-label" x="{{ b.label_x }}" y="{{ chart_height + 14 }}" text-anchor="middle">{{ b.bucket.short }}</text>{% endif %}
+    </g>
+    {% endfor %}
+  </svg>
+  <details class="chart-table">
+    <summary>Als tabel</summary>
+    <table>
+      <thead><tr><th scope="col">Periode</th><th scope="col">{{ "Kosten" if money else "Aantal" }}</th></tr></thead>
+      <tbody>
+        {% for b in items %}<tr><td>{{ b.bucket.long }}</td><td>{{ (b.bucket.value | euro) if money else b.bucket.value }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </details>
+</figure>

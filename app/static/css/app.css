@@ -1637,3 +1637,145 @@ li + li > .list-button {
   font-size: var(--text-sm);
   text-decoration: none;
 }
+
+/* ---- Statistieken ---- */
+
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.stat-tile {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.stat-value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.stat-label {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.chart {
+  margin: 0;
+}
+
+.bar-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  overflow: visible;
+}
+
+.bar {
+  fill: var(--color-accent);
+}
+
+.bar-hit {
+  fill: transparent;
+}
+
+.bar-group:hover .bar {
+  fill: var(--color-accent-hover);
+}
+
+.chart-baseline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.bar-label,
+.bar-value {
+  font-family: inherit;
+  font-size: 9px;
+  fill: var(--color-text-muted);
+}
+
+.bar-value {
+  font-weight: 700;
+  fill: var(--color-text);
+}
+
+.chart-table summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  font-size: var(--text-md);
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.chart-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-table th,
+.chart-table td {
+  padding: 6px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.chart-table td:last-child,
+.chart-table th:last-child {
+  text-align: right;
+}
+
+.meter-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.meter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+
+.meter-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meter {
+  display: block;
+}
+
+.meter-track {
+  fill: var(--color-track);
+}
+
+.meter-fill {
+  fill: var(--color-accent);
+}
+
+.header-link {
+  align-self: center;
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+}

@@ -18,6 +18,7 @@ from app import (
     pwa,
     reminder_pages,
     reminder_scheduler,
+    stats_pages,
     task_pages,
     vehicle_pages,
 )
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(push_pages.router)
     app.include_router(reminder_pages.router)
     app.include_router(vehicle_pages.router)
+    app.include_router(stats_pages.router)
 
     @app.exception_handler(auth.NotAuthenticated)
     def _not_authenticated(request: Request, _exc: Exception) -> Response:
