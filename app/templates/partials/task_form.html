@@ -188,7 +188,7 @@
 
   {% if task %}
   <section>
-    <h2 class="section-title">Logboek</h2>
+    <h2 class="section-title">Logboek{% if cost_totals[1] %} <span class="section-note">· kosten dit jaar {{ cost_totals[0] | euro }}, totaal {{ cost_totals[1] | euro }}</span>{% endif %}</h2>
     {% if log %}
     <ul class="list">
       {% for occ in log %}
@@ -198,7 +198,15 @@
         </span>
         <div class="item-body">
           <div class="item-title">{{ occ.performers|map(attribute="user.display_name")|join(" en ") }}</div>
-          <div class="item-meta">{{ dutch_date(occ.completed_on) }}{% if occ.note %} · {{ occ.note }}{% endif %}</div>
+          <div class="item-meta">{{ dutch_date(occ.completed_on) }}{% if occ.cost_cents %} · {{ occ.cost_cents | euro }}{% endif %}{% if occ.km %} · {{ format_km(occ.km) }}{% endif %}{% if occ.note %} · {{ occ.note }}{% endif %}</div>
+          <details class="points-edit">
+            <summary>{{ "Kosten aanpassen" if occ.cost_cents else "Kosten toevoegen" }}</summary>
+            <form class="inline-fields" hx-post="/taken/{{ task.id }}/logboek/{{ occ.id }}/kosten">
+              <label class="visually-hidden" for="cost-{{ occ.id }}">Kosten in euro</label>
+              <input class="input input-money" id="cost-{{ occ.id }}" name="cost" inputmode="decimal" autocomplete="off" placeholder="0,00" value="{{ occ.cost_cents | euro_input }}">
+              <button class="button button-compact" type="submit">Opslaan</button>
+            </form>
+          </details>
           {% if request.state.competition %}
           <details class="points-edit">
             <summary>{{ ("%d punten" % occ.points) if occ.points else "Geen punten" }}{% if occ.points and occ.performers|length > 1 %} (ieder {{ occ.performers[0].points }}){% endif %} · aanpassen</summary>

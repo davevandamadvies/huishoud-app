@@ -8,7 +8,15 @@ from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import categories, completion, planning, settings_store, tasks, vehicles
+from app import (
+    categories,
+    completion,
+    money,
+    planning,
+    settings_store,
+    tasks,
+    vehicles,
+)
 from app import points as app_points
 from app.auth import CurrentUser, current_user
 from app.dates import due_label, dutch_date, plan_label, today
@@ -128,12 +136,14 @@ def _form_context(
         categories=categories.list_categories(db),
         owners=owners,
         vehicles=vehicles.list_vehicles(db),
+        format_km=vehicles.format_km,
         month_abbr=MONTH_ABBR,
         recurrence_labels=RECURRENCE_LABELS,
         unit_labels=UNIT_LABELS,
         page_title=task.name if task else "Nieuwe taak",
         has_history=tasks.has_history(db, task) if task else False,
         log=completion.history(db, task) if task else [],
+        cost_totals=money.task_totals(db, task, today().year) if task else (0, 0),
         pending=tasks.pending_occurrence(db, task) if task else None,
     )
 
@@ -277,6 +287,7 @@ def _sheet(
     error: str | None = None,
     points: int | None = None,
     km: str = "",
+    cost: str = "",
 ) -> HTMLResponse:
     last_km = vehicles.latest(db, task.vehicle) if task.vehicle else None
     context = _context(
@@ -293,6 +304,7 @@ def _sheet(
         max_days_back=completion.MAX_DAYS_BACK,
         points=points,
         km=km,
+        cost=cost,
         last_km=last_km,
         format_km=vehicles.format_km,
     )
@@ -351,6 +363,7 @@ def complete(
         completed_on = today()
     try:
         km = vehicles.parse_km(raw_km) if raw_km and task.vehicle else None
+        cost_cents = money.parse_euro(form.get_str("cost"))
         completion.complete(
             db,
             user,
@@ -360,8 +373,9 @@ def complete(
             note=note,
             points=points,
             km=km,
+            cost_cents=cost_cents,
         )
-    except (completion.CompletionError, vehicles.VehicleError) as exc:
+    except (completion.CompletionError, vehicles.VehicleError, money.MoneyError) as exc:
         db.rollback()
         return _sheet(
             request,
@@ -375,6 +389,7 @@ def complete(
             error=str(exc),
             points=points,
             km=raw_km,
+            cost=form.get_str("cost"),
         )
     return _changed(after)
 
@@ -548,6 +563,21 @@ def cancel_plan(
         db.rollback()
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _changed(after)
+
+
+@router.post("/{task_id}/logboek/{occurrence_id}/kosten")
+def correct_cost(
+    task_id: int, occurrence_id: int, user: CurrentUser, db: DB, form: Form
+) -> Response:
+    occurrence = db.get(Occurrence, occurrence_id)
+    if occurrence is None or occurrence.task_id != task_id:
+        raise HTTPException(status_code=404)
+    try:
+        cents = money.parse_euro(form.get_str("cost"))
+    except money.MoneyError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    money.correct(db, user, occurrence, cents)
+    return Response(status_code=204, headers={"HX-Refresh": "true"})
 
 
 @router.post("/{task_id}/logboek/{occurrence_id}/punten")

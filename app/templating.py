@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
 
-from app import vehicles
+from app import money, vehicles
 from app.dates import dutch_date, local_date
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -39,3 +39,5 @@ templates.env.globals.update(nav_items=NAV_ITEMS, static_url=static_url)
 templates.env.filters["dutch_date"] = dutch_date
 templates.env.filters["local_date"] = local_date
 templates.env.globals["km_left_label"] = vehicles.km_left_label
+templates.env.filters["euro"] = money.format_euro
+templates.env.filters["euro_input"] = money.input_value

@@ -44,6 +44,7 @@ def complete(
     note: str | None = None,
     points: int | None = None,
     km: int | None = None,
+    cost_cents: int | None = None,
 ) -> CompletionResult:
     if task.is_archived:
         raise CompletionError("Deze taak staat in het archief.")
@@ -82,6 +83,7 @@ def complete(
     occurrence.completed_on = completed_on
     occurrence.completed_at = utcnow()
     occurrence.note = note
+    occurrence.cost_cents = cost_cents
     occurrence.performers = [Performer(user_id=u.id) for u in performers]
     app_points.distribute(occurrence, points)
     if km is not None and task.vehicle is not None:
@@ -126,6 +128,7 @@ def complete(
             "performers": [u.id for u in performers],
             "points": points,
             "km": occurrence.km,
+            "cost_cents": cost_cents,
             "previous_due": previous_due.isoformat() if previous_due else None,
             "next_due": next_date.isoformat() if next_date else None,
         },
