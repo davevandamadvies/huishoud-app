@@ -78,6 +78,19 @@
       {% with field="interval_every" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
+    <fieldset class="field">
+      <legend class="label">Seizoen <span class="label-note">(optioneel, niets gekozen = het hele jaar)</span></legend>
+      <div class="day-picker month-picker">
+        {% for abbr in month_abbr %}
+        <label class="day-chip">
+          <input type="checkbox" name="season" value="{{ loop.index }}"{% if loop.index|string in (values.season or []) %} checked{% endif %}>
+          <span>{{ abbr }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <p class="hint">Buiten het seizoen schuift de taak door naar het begin van het volgende seizoen en komen er geen herinneringen.</p>
+    </fieldset>
+
     <div class="field first-reminder-field">
       <label class="label" for="first_reminder_days">Eerste herinnering <span class="label-note">(optioneel)</span></label>
       <div class="inline-fields">

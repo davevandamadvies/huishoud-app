@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from app import categories, planning, planning_view
+from app import categories, planning, planning_view, seasons
 from app.auth import CurrentUser, current_user
 from app.dates import dutch_date, plan_label, short_weekday, today
 from app.db import get_db
@@ -54,6 +54,7 @@ def _context(db: Session, user: User, day: date) -> dict:
         "active_nav": "planning",
         "today": today(),
         "view": planning_view.build(db, day),
+        "season_notes": seasons.notes(db, today()),
         "month_label": f"{_MONTHS[day.month - 1]} {day.year}",
         "dutch_date": dutch_date,
         "short_weekday": short_weekday,

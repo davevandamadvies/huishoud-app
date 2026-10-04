@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app import audit
 from app.db import new_session
 from app.models import Category, Task, Vehicle
-from app.recurrence import IntervalUnit, RecurrenceType
+from app.recurrence import IntervalUnit, RecurrenceType, format_months
 from app.seed_data import AUTO_CATEGORY, TASKS
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ def seed_tasks(db: Session) -> tuple[int, int]:
                 name=item.name,
                 vehicle=vehicle if item.category == AUTO_CATEGORY else None,
                 km_interval=item.km if item.category == AUTO_CATEGORY else None,
+                season_months=format_months(set(item.season or ())),
                 category=categories[item.category],
                 recurrence_type=RecurrenceType(item.recurrence),
                 interval_every=item.every,

@@ -34,7 +34,7 @@ from app.models import (
     User,
     UserStatus,
 )
-from app.recurrence import RecurrenceType
+from app.recurrence import RecurrenceType, in_season
 from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -198,6 +198,8 @@ def run(
             for occurrence in pending:
                 if occurrence.task.category_id in muted:
                     continue
+                if not in_season(slot.day, occurrence.task.season):
+                    continue  # buiten het seizoen geen herinneringen
                 if user not in reminder_content.recipients(occurrence, everyone):
                     continue
                 reason = task_reason(occurrence, slot.day, preference)
