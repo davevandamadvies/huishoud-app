@@ -47,13 +47,27 @@ def _day(value: str) -> date:
         return today()
 
 
-def _context(db: Session, user: User, day: date) -> dict:
+def _mode(value: str) -> planning_view.Mode:
+    try:
+        return planning_view.Mode(value)
+    except ValueError:
+        return planning_view.Mode.MONTH
+
+
+def _context(db: Session, user: User, day: date, mode: planning_view.Mode) -> dict:
+    view = planning_view.build(db, day, mode)
     return {
         "user": user,
         "page_title": "Planning",
         "active_nav": "planning",
         "today": today(),
-        "view": planning_view.build(db, day),
+        "view": view,
+        "modes": [
+            (planning_view.Mode.MONTH, "Maand"),
+            (planning_view.Mode.WEEK, "Week"),
+        ],
+        "weekday_names": ("ma", "di", "wo", "do", "vr", "za", "zo"),
+        "period_label": _period_label(view),
         "season_notes": seasons.notes(db, today()),
         "month_label": f"{_MONTHS[day.month - 1]} {day.year}",
         "dutch_date": dutch_date,
@@ -63,19 +77,29 @@ def _context(db: Session, user: User, day: date) -> dict:
     }
 
 
+def _period_label(view: planning_view.PlanningView) -> str:
+    if view.mode == planning_view.Mode.MONTH:
+        return f"{_MONTHS[view.day.month - 1]} {view.day.year}"
+    first, last = view.days[0].date, view.days[-1].date
+    if first.month == last.month:
+        return f"{first.day}–{last.day} {_MONTHS[last.month - 1]}"
+    start = f"{first.day} {_MONTHS[first.month - 1][:3]}"
+    return f"{start} – {last.day} {_MONTHS[last.month - 1][:3]}"
+
+
 @router.get("")
 def planning_page(
-    request: Request, user: CurrentUser, db: DB, dag: str = ""
+    request: Request, user: CurrentUser, db: DB, dag: str = "", weergave: str = ""
 ) -> HTMLResponse:
-    context = _context(db, user, _day(dag))
+    context = _context(db, user, _day(dag), _mode(weergave))
     return templates.TemplateResponse(request, "pages/planning.html", context)
 
 
 @router.get("/inhoud")
 def planning_content(
-    request: Request, user: CurrentUser, db: DB, dag: str = ""
+    request: Request, user: CurrentUser, db: DB, dag: str = "", weergave: str = ""
 ) -> HTMLResponse:
-    context = _context(db, user, _day(dag))
+    context = _context(db, user, _day(dag), _mode(weergave))
     return templates.TemplateResponse(
         request, "partials/planning_content.html", context
     )
