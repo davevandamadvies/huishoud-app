@@ -20,6 +20,7 @@ from app.models.category import Category
 from app.models.user import User
 from app.models.vehicle import Vehicle
 from app.recurrence import (
+    DEFAULT_WINTER,
     IntervalUnit,
     RecurrenceType,
     Rule,
@@ -81,6 +82,9 @@ class Task(Base):
     km_interval: Mapped[int | None] = mapped_column(Integer)
     # Actieve maanden, bijv. "3,4,5,6,7,8,9,10"; leeg = het hele jaar.
     season_months: Mapped[str | None] = mapped_column(String(30))
+    # Winterinterval (zelfde eenheid) en de wintermaanden (leeg = nov–feb).
+    winter_every: Mapped[int | None] = mapped_column(Integer)
+    winter_months: Mapped[str | None] = mapped_column(String(30))
     notes: Mapped[str | None] = mapped_column(Text)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
@@ -94,7 +98,13 @@ class Task(Base):
 
     @property
     def rule(self) -> Rule:
-        return Rule(self.recurrence_type, self.interval_every, self.interval_unit)
+        return Rule(
+            self.recurrence_type,
+            self.interval_every,
+            self.interval_unit,
+            winter_every=self.winter_every,
+            winter_months=parse_months(self.winter_months) or DEFAULT_WINTER,
+        )
 
     @property
     def is_archived(self) -> bool:

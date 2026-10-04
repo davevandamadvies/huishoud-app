@@ -49,6 +49,7 @@ def seed_tasks(db: Session) -> tuple[int, int]:
                 vehicle=vehicle if item.category == AUTO_CATEGORY else None,
                 km_interval=item.km if item.category == AUTO_CATEGORY else None,
                 season_months=format_months(set(item.season or ())),
+                winter_every=item.winter_every,
                 category=categories[item.category],
                 recurrence_type=RecurrenceType(item.recurrence),
                 interval_every=item.every,

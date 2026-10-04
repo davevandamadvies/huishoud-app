@@ -580,6 +580,24 @@ a.card-link:hover {
   outline-offset: 2px;
 }
 
+/* Winterinterval alleen bij een gewoon interval */
+.form:has(input[name="recurrence_type"]:not([value="interval"]):checked) .winter-field {
+  display: none;
+}
+
+.winter-field summary {
+  cursor: pointer;
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+}
+
+.stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 /* Km-interval alleen met een voertuig en een gewoon interval */
 .form:has(select[name="vehicle_id"] option[value=""]:checked) .km-field,
 .form:has(input[name="recurrence_type"]:not([value="interval"]):checked) .km-field {
