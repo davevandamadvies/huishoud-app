@@ -27,10 +27,6 @@ class ReminderPreference(Base):
     task_on_day: Mapped[bool] = mapped_column(Boolean, default=False)
     task_days_before: Mapped[int] = mapped_column(Integer, default=0)  # 0 = niet
     task_late_daily: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Stille uren (HH:MM, mag over middernacht)
-    quiet_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    quiet_start: Mapped[str] = mapped_column(String(5), default="22:00")
-    quiet_end: Mapped[str] = mapped_column(String(5), default="07:00")
     updated_at: Mapped[datetime] = mapped_column(
         UTCDateTime(), default=utcnow, onupdate=utcnow
     )

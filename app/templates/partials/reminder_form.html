@@ -92,25 +92,6 @@
     </label>
     <p class="hint">Bij taken met een vaste datum (zoals de APK) stel je bij de taak zelf in vanaf wanneer je een herinnering krijgt.</p>
 
-    {% elif slug == "stille-uren" %}
-    <p class="hint">Binnen de stille uren komt er niets binnen. Een melding schuift dan door naar het einde van de stille uren.</p>
-    <label class="option">
-      <input type="checkbox" name="quiet_enabled" value="1"{% if v.quiet_enabled %} checked{% endif %}>
-      <span>Stille uren aan</span>
-    </label>
-    <div class="inline-fields">
-      <div class="field">
-        <label class="label" for="quiet_start">Van</label>
-        <input class="input input-time" id="quiet_start" name="quiet_start" type="time" value="{{ v.quiet_start }}"{{ invalid("quiet_start") }}>
-        {% with field="quiet_start" %}{% include "partials/field_error.html" %}{% endwith %}
-      </div>
-      <div class="field">
-        <label class="label" for="quiet_end">Tot</label>
-        <input class="input input-time" id="quiet_end" name="quiet_end" type="time" value="{{ v.quiet_end }}"{{ invalid("quiet_end") }}>
-        {% with field="quiet_end" %}{% include "partials/field_error.html" %}{% endwith %}
-      </div>
-    </div>
-
     {% elif slug == "categorieen" %}
     <fieldset class="field">
       <legend class="label">Herinneringen voor</legend>

@@ -45,7 +45,6 @@ def test_defaults_without_row(db: Session, user: User) -> None:
     assert preference.task_on_day is False
     assert preference.task_days_before == 0
     assert preference.task_late_daily is False
-    assert (preference.quiet_start, preference.quiet_end) == ("22:00", "07:00")
     assert db.scalar(select(ReminderPreference)) is None
 
 
@@ -53,12 +52,7 @@ def test_summary_defaults(db: Session, user: User) -> None:
     make_category(db)
     s = reminders.summary(db, user)
     assert s.update == "Elke dag · 08:30"
-    assert (s.before, s.late, s.quiet, s.categories) == (
-        "Uit",
-        "Uit",
-        "22:00–07:00",
-        "Alle",
-    )
+    assert (s.tasks, s.categories) == ("Uit", "Alle")
 
 
 # ---- Update ----
@@ -149,7 +143,7 @@ def test_update_off_and_only_mine(db: Session, user: User) -> None:
     assert reminders.summary(db, user).update == "Uit"
 
 
-# ---- Losse meldingen en stille uren ----
+# ---- Losse meldingen ----
 
 
 def test_save_tasks(db: Session, user: User) -> None:
@@ -159,62 +153,17 @@ def test_save_tasks(db: Session, user: User) -> None:
         form(task_on_day="1", task_days_before="2", task_late_daily="1"),
     )
     s = reminders.summary(db, user)
-    assert s.before == "Op de dag en 2 dagen"
-    assert s.late == "Dagelijks"
+    assert s.tasks == "Op de dag · 2 dagen vooraf · bij te laat"
+
+
+def test_tasks_summary_only_late(db: Session, user: User) -> None:
+    reminders.save_tasks(db, user, form(task_days_before="0", task_late_daily="1"))
+    assert reminders.summary(db, user).tasks == "Bij te laat"
 
 
 def test_days_before_must_be_a_choice(db: Session, user: User) -> None:
     with pytest.raises(reminders.ReminderFormError):
         reminders.save_tasks(db, user, form(task_days_before="3"))
-
-
-def test_save_quiet(db: Session, user: User) -> None:
-    reminders.save_quiet(
-        db, user, form(quiet_enabled="1", quiet_start="23:30", quiet_end="6:45")
-    )
-    preference = db.get(ReminderPreference, user.id)
-    assert (preference.quiet_start, preference.quiet_end) == ("23:30", "06:45")
-
-
-@pytest.mark.parametrize(
-    ("start", "end", "field"),
-    [("22:00", "22:00", "quiet_end"), ("x", "07:00", "quiet_start")],
-)
-def test_quiet_validation(
-    db: Session, user: User, start: str, end: str, field: str
-) -> None:
-    with pytest.raises(reminders.ReminderFormError) as exc:
-        reminders.save_quiet(
-            db, user, form(quiet_enabled="1", quiet_start=start, quiet_end=end)
-        )
-    assert field in exc.value.errors
-
-
-@pytest.mark.parametrize(
-    ("start", "end", "moment", "quiet"),
-    [
-        ("22:00", "07:00", time(23, 0), True),
-        ("22:00", "07:00", time(3, 0), True),
-        ("22:00", "07:00", time(7, 0), False),
-        ("22:00", "07:00", time(21, 59), False),
-        ("22:00", "07:00", time(22, 0), True),
-        ("13:00", "15:00", time(14, 0), True),
-        ("13:00", "15:00", time(15, 0), False),
-        ("13:00", "15:00", time(12, 0), False),
-    ],
-)
-def test_is_quiet_over_midnight(
-    db: Session, user: User, start: str, end: str, moment: time, quiet: bool
-) -> None:
-    preference = reminders.get(db, user)
-    preference.quiet_start, preference.quiet_end = start, end
-    assert reminders.is_quiet(preference, moment) is quiet
-
-
-def test_quiet_off_is_never_quiet(db: Session, user: User) -> None:
-    preference = reminders.get(db, user)
-    preference.quiet_enabled = False
-    assert not reminders.is_quiet(preference, time(23, 0))
 
 
 # ---- Categorieën ----
@@ -262,11 +211,12 @@ def test_settings_show_reminder_summary(client: TestClient) -> None:
     text = client.get("/meer").text
     assert "Mijn reminders" in text
     assert "Elke dag · 08:30" in text
-    assert "22:00–07:00" in text
+    assert "Losse meldingen" in text
+    assert "Stille uren" not in text and "Bij te laat" not in text
     assert 'href="/reminders/update"' in text
 
 
-@pytest.mark.parametrize("slug", ["update", "taken", "stille-uren", "categorieen"])
+@pytest.mark.parametrize("slug", ["update", "taken", "categorieen"])
 def test_section_pages(client: TestClient, slug: str) -> None:
     response = client.get(f"/reminders/{slug}")
     assert response.status_code == 200
@@ -354,3 +304,7 @@ def test_first_reminder_validation(client: TestClient, db: Session) -> None:
 def test_seed_sets_apk_first_reminder() -> None:
     apk = next(t for t in TASKS if t.name == "APK")
     assert apk.first_reminder_days == 60
+
+
+def test_quiet_hours_page_is_gone(client: TestClient) -> None:
+    assert client.get("/reminders/stille-uren").status_code == 404

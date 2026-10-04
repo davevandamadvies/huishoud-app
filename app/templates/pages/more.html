@@ -29,22 +29,10 @@
     </li>
     <li>
       <a class="list-item list-link" href="/reminders/taken">
-        <span class="item-title">Van tevoren</span>
-        <span class="item-end">{{ reminders.before }}</span>
-        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
-      </a>
-    </li>
-    <li>
-      <a class="list-item list-link" href="/reminders/taken">
-        <span class="item-title">Bij te laat</span>
-        <span class="item-end">{{ reminders.late }}</span>
-        <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
-      </a>
-    </li>
-    <li>
-      <a class="list-item list-link" href="/reminders/stille-uren">
-        <span class="item-title">Stille uren</span>
-        <span class="item-end">{{ reminders.quiet }}</span>
+        <div class="item-body">
+          <div class="item-title">Losse meldingen</div>
+          <div class="item-meta">{{ reminders.tasks }}</div>
+        </div>
         <svg class="chevron chevron-tight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
       </a>
     </li>

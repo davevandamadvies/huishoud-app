@@ -2065,3 +2065,8 @@ li + li > .list-button {
 .month-plan:not(:has([data-state="anders"]:not(.month-chip-mini))) .alt-field {
   display: none;
 }
+
+.list-link > .item-body {
+  flex: 1;
+  min-width: 0;
+}

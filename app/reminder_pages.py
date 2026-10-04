@@ -26,7 +26,6 @@ DB = Annotated[Session, Depends(get_db)]
 SECTIONS: dict[str, tuple[str, Callable[[Session, User, FormData], object]]] = {
     "update": ("Update", reminders.save_update),
     "taken": ("Losse meldingen", reminders.save_tasks),
-    "stille-uren": ("Stille uren", reminders.save_quiet),
     "categorieen": ("Categorieën", reminders.save_categories),
 }
 
@@ -44,9 +43,6 @@ def _values(db: Session, user: User) -> dict:
         "task_on_day": preference.task_on_day,
         "task_days_before": preference.task_days_before,
         "task_late_daily": preference.task_late_daily,
-        "quiet_enabled": preference.quiet_enabled,
-        "quiet_start": preference.quiet_start,
-        "quiet_end": preference.quiet_end,
         "muted": reminders.muted_category_ids(db, user),
     }
 
@@ -69,9 +65,6 @@ def _values_from_form(form: FormData) -> dict:
         "task_on_day": "task_on_day" in form,
         "task_days_before": number("task_days_before"),
         "task_late_daily": "task_late_daily" in form,
-        "quiet_enabled": "quiet_enabled" in form,
-        "quiet_start": form.get_str("quiet_start"),
-        "quiet_end": form.get_str("quiet_end"),
         "muted": set(),
     }
 
