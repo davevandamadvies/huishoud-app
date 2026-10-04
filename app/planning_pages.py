@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app import categories, planning, planning_view, seasons
 from app.auth import CurrentUser, current_user
-from app.dates import dutch_date, plan_label, short_weekday, today
+from app.dates import dutch_date, plan_label, short_date, short_weekday, today
 from app.db import get_db
 from app.models import User
 from app.recurrence import describe
@@ -72,6 +72,7 @@ def _context(db: Session, user: User, day: date, mode: planning_view.Mode) -> di
         "month_label": f"{_MONTHS[day.month - 1]} {day.year}",
         "dutch_date": dutch_date,
         "short_weekday": short_weekday,
+        "short_date": short_date,
         "plan_label": plan_label,
         "responsible": planning.responsible,
     }

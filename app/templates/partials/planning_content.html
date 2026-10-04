@@ -43,11 +43,11 @@ href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get=
              {% if d.date == view.day %}aria-current="date"{% endif %} aria-label="{{ day_label(d) }}">
             <span class="day-num{% if d.date == today %} is-today{% endif %}" aria-hidden="true">{{ d.date.day }}</span>
             <span class="month-dots" aria-hidden="true">
-              {% for occ in d.dots %}<span class="dot cat-{{ occ.task.category.color }}"></span>{% endfor %}
+              {% for occ in d.dots %}<span class="dot cat-{{ occ.task.category.color }}{% if occ.status.value == 'open' %} dot-due{% endif %}"></span>{% endfor %}
               {% if d.more %}<span class="month-more">+{{ d.more }}</span>{% endif %}
             </span>
             <span class="month-names" aria-hidden="true">
-              {% for occ in d.items[:3] %}<span class="month-name">{{ occ.task.name }}</span>{% endfor %}
+              {% for occ in d.items[:3] %}<span class="month-name{% if occ.status.value == 'open' %} is-due{% endif %}">{{ occ.task.name }}</span>{% endfor %}
               {% if d.items|length > 3 %}<span class="month-more">+{{ d.items|length - 3 }}</span>{% endif %}
             </span>
           </a>
@@ -81,8 +81,13 @@ href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get=
     <ul class="list">
       {% for occ in view.items %}
       {% set who = responsible(occ) %}
-      <li class="list-item task-row">
+      {% set is_due = occ.status.value == "open" %}
+      <li class="list-item task-row{% if is_due %} is-due{% endif %}">
+        {% if is_due %}
+        <span class="time time-due{% if occ.due_date < today %} late{% endif %}">vervalt</span>
+        {% else %}
         <span class="time">{{ occ.planned_time.strftime('%H:%M') if occ.planned_time else "—" }}</span>
+        {% endif %}
         <a class="item-body item-link" href="/taken/{{ occ.task.id }}">
           <div class="item-title">{{ occ.task.name }}</div>
           <div class="item-meta">
@@ -93,10 +98,17 @@ href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get=
             {% elif who %}
             <span>{{ who[0].display_name }}</span>
             {% else %}
-            <span>Nog niemand</span>
+            <span>{{ "Nog niet ingepland" if is_due else "Nog niemand" }}</span>
             {% endif %}
+            {% if is_due and occ.due_date < today %}<span class="late">· te laat</span>{% endif %}
+            {% if occ.days_after_due %}<span class="late">· na vervaldatum ({{ short_date(occ.due_date) }})</span>{% endif %}
           </div>
         </a>
+        {% if is_due %}
+        <button class="icon-button" type="button" hx-get="/taken/{{ occ.task.id }}/inplannen?datum={{ view.day.isoformat() }}" hx-target="#sheet" hx-swap="innerHTML" aria-label="{{ occ.task.name }} inplannen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        </button>
+        {% endif %}
         <button class="check" type="button" hx-get="/taken/{{ occ.task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML" aria-label="{{ occ.task.name }} afvinken"></button>
       </li>
       {% endfor %}

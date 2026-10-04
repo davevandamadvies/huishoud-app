@@ -19,7 +19,14 @@ from app import (
 )
 from app import points as app_points
 from app.auth import CurrentUser, current_user
-from app.dates import due_label, dutch_date, plan_label, today
+from app.dates import (
+    due_label,
+    dutch_date,
+    plan_label,
+    short_date,
+    short_weekday,
+    today,
+)
 from app.db import get_db
 from app.forms import Form, FormData
 from app.models import Occurrence, OccurrenceStatus, Role, Task, User, UserStatus
@@ -411,29 +418,37 @@ def _changed(after: str) -> HTMLResponse:
     return HTMLResponse("", headers=headers)
 
 
-def _season_warning(task: Task, raw_date: str) -> str | None:
-    """Waarschuwing als de gekozen datum buiten het seizoen valt."""
+def _plan_warnings(db: Session, task: Task, raw_date: str) -> list[str]:
+    """Waarschuwingen bij een gekozen plandatum (inplannen mag wel)."""
     try:
         day = date.fromisoformat(raw_date)
     except (TypeError, ValueError):
-        return None
-    if in_season(day, task.season):
-        return None
-    return (
-        f"Let op: buiten het seizoen ({describe_season(task.season)}). "
-        "Inplannen kan wel."
-    )
+        return []
+    warnings = []
+    pending = tasks.pending_occurrence(db, task)
+    due = pending.due_date if pending else None
+    if due is not None and day > due:
+        days = (day - due).days
+        warnings.append(
+            f"Dat is {days} {'dag' if days == 1 else 'dagen'} na de vervaldatum "
+            f"({short_weekday(due)} {short_date(due)}). Inplannen kan wel."
+        )
+    if not in_season(day, task.season):
+        warnings.append(
+            f"Buiten het seizoen ({describe_season(task.season)}). Inplannen kan wel."
+        )
+    return warnings
 
 
-@router.get("/{task_id}/inplannen/seizoen")
-def plan_season_warning(
+@router.get("/{task_id}/inplannen/controle")
+def plan_warnings(
     request: Request, task_id: int, user: CurrentUser, db: DB, planned_date: str = ""
 ) -> HTMLResponse:
     task = _get(db, task_id)
     return templates.TemplateResponse(
         request,
-        "partials/season_warning.html",
-        {"season_warning": _season_warning(task, planned_date)},
+        "partials/plan_warnings.html",
+        {"plan_warnings": _plan_warnings(db, task, planned_date)},
     )
 
 
@@ -457,7 +472,7 @@ def _plan_sheet(
         after=after,
         error=error,
         planned=pending if pending and pending.planned_date else None,
-        season_warning=_season_warning(task, values.get("planned_date", "")),
+        plan_warnings=_plan_warnings(db, task, values.get("planned_date", "")),
         min_date=today().isoformat(),
         max_date=(today() + timedelta(days=planning.MAX_DAYS_AHEAD)).isoformat(),
     )

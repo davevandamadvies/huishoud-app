@@ -11,6 +11,8 @@
       <div class="label">Gepland</div>
       <div class="{{ 'due-late' if pending.planned_date < today else 'due-soon' }}">{{ dutch_date(pending.planned_date)|capitalize }}{% if pending.planned_time %}, {{ pending.planned_time.strftime('%H:%M') }}{% endif %}</div>
       <div class="item-meta">{{ who|map(attribute="display_name")|join(" en ") if who else "iedereen" }}</div>
+      {% if pending.days_after_due %}<div class="item-meta late">{{ pending.days_after_due }} {{ "dag" if pending.days_after_due == 1 else "dagen" }} na de vervaldatum ({{ dutch_date(pending.due_date) }})</div>
+      {% elif pending.due_date %}<div class="item-meta">Vervaldatum {{ dutch_date(pending.due_date) }}</div>{% endif %}
     </div>
     <div class="card-actions">
       <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Afvinken</button>
