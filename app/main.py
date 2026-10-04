@@ -9,6 +9,8 @@ from fastapi.staticfiles import StaticFiles
 from app import (
     admin,
     auth,
+    backup,
+    backup_pages,
     category_pages,
     pages,
     planning_pages,
@@ -38,7 +40,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         logger.error("Inloggen is niet ingesteld; ontbrekend: %s", ", ".join(missing))
     with new_session() as db:
         run_bootstrap(db, settings)
-    async with reminder_scheduler.running():
+    async with reminder_scheduler.running(), backup.running():
         yield
 
 
@@ -64,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(admin.router)
+    app.include_router(backup_pages.router)
     app.include_router(category_pages.router)
     app.include_router(task_pages.router)
     app.include_router(planning_pages.router)
