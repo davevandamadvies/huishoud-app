@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<header>
+  {% with back_href="/scores", back_label="Scores" %}{% include "partials/back_link.html" %}{% endwith %}
+  <h1 class="page-title">Statistieken</h1>
+</header>
+
+<nav class="segmented" aria-label="Periode">
+  {% for value, label in ranges.items() %}
+  <a class="segment" href="/statistieken?periode={{ value.value }}"{% if value == selected %} aria-current="true"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if not s.done %}
+<div class="empty-state"><strong>Nog niets gedaan in deze periode</strong>Zodra er taken zijn afgevinkt, verschijnen hier de cijfers.</div>
+{% else %}
+<section class="stat-tiles" aria-label="Samenvatting">
+  <div class="stat-tile">
+    <div class="stat-value">{{ s.done }}</div>
+    <div class="stat-label">keer gedaan</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-value">{{ "%d%%" % s.on_time_pct if s.on_time_pct is not none else "–" }}</div>
+    <div class="stat-label">op tijd</div>
+  </div>
+  <div class="stat-tile">
+    <div class="stat-value">{{ s.cost_total | euro if s.cost_total else "–" }}</div>
+    <div class="stat-label">kosten</div>
+  </div>
+</section>
+
+<section class="card stack-sm">
+  <h2 class="section-title">Gedaan per {{ "maand" if s.per_period and s.per_period[0].key[1] else "jaar" }}</h2>
+  {% with buckets=s.per_period, title="Aantal keer gedaan per periode", chart_id="done", money=False %}{% include "partials/bar_chart.html" %}{% endwith %}
+</section>
+
+<section>
+  <h2 class="section-title">Op tijd <span class="section-note">· {{ s.on_time }} van {{ s.with_due }} op of voor de vervaldatum</span></h2>
+  {% if s.most_late %}
+  <p class="hint">Deze taken waren het vaakst te laat:</p>
+  {% with rows=s.most_late, money=False %}{% include "partials/meter_rows.html" %}{% endwith %}
+  {% else %}
+  <p class="empty-state">Niets te laat gedaan in deze periode. Knap!</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2 class="section-title">Per categorie</h2>
+  {% with rows=s.per_category, money=False %}{% include "partials/meter_rows.html" %}{% endwith %}
+</section>
+
+<section>
+  <h2 class="section-title">Per persoon</h2>
+  {% with rows=s.per_person, money=False %}{% include "partials/meter_rows.html" %}{% endwith %}
+  <p class="hint">Aantal keer meegedaan; samen doen telt voor iedereen.</p>
+</section>
+
+{% if s.cost_total %}
+<section class="card stack-sm">
+  <h2 class="section-title">Kosten per {{ "maand" if s.cost_per_period[0].key[1] else "jaar" }}</h2>
+  {% with buckets=s.cost_per_period, title="Kosten per periode", chart_id="cost", money=True %}{% include "partials/bar_chart.html" %}{% endwith %}
+</section>
+<section>
+  <h2 class="section-title">Kosten per categorie</h2>
+  {% with rows=s.cost_per_category, money=True %}{% include "partials/meter_rows.html" %}{% endwith %}
+</section>
+<section>
+  <h2 class="section-title">Duurste taken</h2>
+  {% with rows=s.cost_top, money=True %}{% include "partials/meter_rows.html" %}{% endwith %}
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{# Horizontale staven met label en waarde. Verwacht: rows, money #}
+<ul class="list meter-list">
+  {% for r in rows %}
+  <li class="list-item meter-row">
+    <div class="meter-head">
+      <span class="meter-label">{% if r.color %}<span class="dot cat-{{ r.color }}" aria-hidden="true"></span>{% endif %}{{ r.label }}</span>
+      <span class="meter-value">{{ (r.value | euro) if money else r.value }}</span>
+    </div>
+    <svg class="meter" width="100%" height="8" aria-hidden="true" focusable="false">
+      <rect class="meter-track" width="100%" height="8" rx="4"></rect>
+      <rect class="meter-fill" width="{{ '%.1f' % share(r.value, rows) }}%" height="8" rx="4"></rect>
+    </svg>
+    {% if r.detail %}<div class="item-meta">{{ r.detail }}</div>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
