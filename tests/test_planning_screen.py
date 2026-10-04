@@ -25,12 +25,13 @@ def test_view_week_and_day(db: Session, user: User) -> None:
     plan(db, user, make_task(db, name="Andere dag"), monday + timedelta(days=6))
     plan(db, user, make_task(db, name="Volgende week"), monday + timedelta(days=7))
 
-    view = planning_view.build(db, day)
+    view = planning_view.build(db, day, planning_view.Mode.WEEK)
     assert [d.date for d in view.days] == [monday + timedelta(days=i) for i in range(7)]
     with_items = {d.date for d in view.days if d.has_items}
     assert with_items == {day, monday + timedelta(days=6)}
     assert [o.task.name for o in view.items] == ["Ochtend", "Middag", "Zonder tijd"]
-    assert view.previous_week == day - timedelta(days=7)
+    assert view.previous == day - timedelta(days=7)
+    assert view.next == day + timedelta(days=7)
 
 
 def test_archived_and_unplanned_not_shown(db: Session, user: User) -> None:
@@ -61,7 +62,7 @@ def test_plannable_tasks(db: Session, user: User) -> None:
 
 
 def test_week_crosses_year_boundary(db: Session) -> None:
-    view = planning_view.build(db, date(2026, 12, 31))
+    view = planning_view.build(db, date(2026, 12, 31), planning_view.Mode.WEEK)
     assert view.days[0].date == date(2026, 12, 28)
     assert view.days[-1].date == date(2027, 1, 3)
 
@@ -113,3 +114,62 @@ def test_plan_sheet_uses_chosen_day(client: TestClient, db: Session) -> None:
     day = (today() + timedelta(days=4)).isoformat()
     html = client.get(f"/taken/{task.id}/inplannen", params={"datum": day}).text
     assert f'value="{day}"' in html
+
+
+# ---- Maandweergave ----
+
+
+def test_month_view_covers_whole_weeks(db: Session) -> None:
+    view = planning_view.build(db, date(2026, 10, 4))  # standaard: maand
+    assert view.mode == planning_view.Mode.MONTH
+    assert view.days[0].date == date(2026, 9, 28)  # maandag vóór 1 okt
+    assert view.days[-1].date == date(2026, 11, 1)  # zondag na 31 okt
+    assert len(view.weeks) == 5 and all(len(w) == 7 for w in view.weeks)
+    assert not view.days[0].in_month and view.days[3].in_month
+
+
+def test_month_starting_on_monday(db: Session) -> None:
+    view = planning_view.build(db, date(2026, 6, 15))  # 1 juni 2026 is maandag
+    assert view.days[0].date == date(2026, 6, 1)
+    assert view.days[-1].date == date(2026, 7, 5)
+
+
+def test_february_leap_year(db: Session) -> None:
+    view = planning_view.build(db, date(2028, 2, 10))
+    assert date(2028, 2, 29) in [d.date for d in view.days if d.in_month]
+
+
+def test_month_navigation(db: Session) -> None:
+    view = planning_view.build(db, date(2026, 1, 31))
+    assert view.previous == date(2025, 12, 31)
+    assert view.next == date(2026, 2, 28)
+    december = planning_view.build(db, date(2026, 12, 15))
+    assert december.next == date(2027, 1, 15)
+
+
+def test_month_items_and_dots(db: Session, user: User) -> None:
+    day = today() + timedelta(days=1)
+    for n in range(5):
+        plan(db, user, make_task(db, name=f"Taak {n}"), day)
+    view = planning_view.build(db, day)
+    cell = next(d for d in view.days if d.date == day)
+    assert len(cell.items) == 5
+    assert len(cell.dots) == 3 and cell.more == 2
+    assert len(view.items) == 5
+
+
+def test_month_page(client: TestClient, db: Session, user: User) -> None:
+    day = today() + timedelta(days=1)
+    plan(db, user, make_task(db, name="Dakgoten"), day)
+    html = client.get(f"/planning?dag={day.isoformat()}").text
+    assert 'class="month-grid"' in html
+    assert "1 taak" in html  # label van de dag voor schermlezers
+    assert "Dakgoten" in html
+    week = client.get(f"/planning?weergave=week&dag={day.isoformat()}").text
+    assert 'class="weekstrip"' in week and 'class="month-grid"' not in week
+    assert client.get("/planning?weergave=onzin").status_code == 200
+
+
+def test_mode_kept_in_links(client: TestClient) -> None:
+    html = client.get("/planning/inhoud?weergave=week").text
+    assert "weergave=week&amp;dag=" in html

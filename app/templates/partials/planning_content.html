@@ -1,25 +1,70 @@
+{% macro nav(day, mode) -%}
+href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get="/planning/inhoud?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML" hx-push-url="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}"
+{%- endmacro %}
+{% macro day_label(d) -%}
+{{ dutch_date(d.date) }}{% if d.items %}, {{ d.items|length }} {{ "taak" if d.items|length == 1 else "taken" }}{% else %}, niets gepland{% endif %}
+{%- endmacro %}
 <div id="planning-content" class="stack"
-     hx-get="/planning/inhoud?dag={{ view.day.isoformat() }}" hx-trigger="occurrences-changed from:body"
+     hx-get="/planning/inhoud?weergave={{ view.mode.value }}&amp;dag={{ view.day.isoformat() }}" hx-trigger="occurrences-changed from:body"
      hx-swap="outerHTML" hx-disinherit="*">
   <header class="page-header-row">
     <h1 class="page-title">Planning</h1>
-    <p class="page-eyebrow">{{ month_label }}</p>
+    {% if view.day != today %}<a class="header-link" {{ nav(today, view.mode) }}>Vandaag</a>{% endif %}
   </header>
 
-  <nav class="weekstrip" aria-label="Week">
-    <a class="week-arrow" href="/planning?dag={{ view.previous_week.isoformat() }}"
-       hx-get="/planning/inhoud?dag={{ view.previous_week.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML"
-       hx-push-url="/planning?dag={{ view.previous_week.isoformat() }}" aria-label="Vorige week">
+  <nav class="segmented" aria-label="Weergave">
+    {% for mode, label in modes %}
+    <a class="segment" {{ nav(view.day, mode) }}{% if mode == view.mode %} aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  <div class="period-nav">
+    <a class="week-arrow" {{ nav(view.previous, view.mode) }} aria-label="{{ 'Vorige maand' if view.mode.value == 'maand' else 'Vorige week' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6"/></svg>
     </a>
+    <p class="period-label" aria-live="polite">{{ period_label }}</p>
+    <a class="week-arrow" {{ nav(view.next, view.mode) }} aria-label="{{ 'Volgende maand' if view.mode.value == 'maand' else 'Volgende week' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+
+  {% if view.mode.value == "maand" %}
+  <table class="month-grid">
+    <caption class="visually-hidden">{{ period_label }}</caption>
+    <thead>
+      <tr>{% for name in weekday_names %}<th scope="col">{{ name }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for week in view.weeks %}
+      <tr>
+        {% for d in week %}
+        <td>
+          <a class="month-day{% if not d.in_month %} is-other{% endif %}" {{ nav(d.date, view.mode) }}
+             {% if d.date == view.day %}aria-current="date"{% endif %} aria-label="{{ day_label(d) }}">
+            <span class="day-num{% if d.date == today %} is-today{% endif %}" aria-hidden="true">{{ d.date.day }}</span>
+            <span class="month-dots" aria-hidden="true">
+              {% for occ in d.dots %}<span class="dot cat-{{ occ.task.category.color }}"></span>{% endfor %}
+              {% if d.more %}<span class="month-more">+{{ d.more }}</span>{% endif %}
+            </span>
+            <span class="month-names" aria-hidden="true">
+              {% for occ in d.items[:3] %}<span class="month-name">{{ occ.task.name }}</span>{% endfor %}
+              {% if d.items|length > 3 %}<span class="month-more">+{{ d.items|length - 3 }}</span>{% endif %}
+            </span>
+          </a>
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <nav class="weekstrip" aria-label="Week">
     <ul>
       {% for d in view.days %}
       <li>
-        <a class="day" href="/planning?dag={{ d.date.isoformat() }}"
-           hx-get="/planning/inhoud?dag={{ d.date.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML"
-           hx-push-url="/planning?dag={{ d.date.isoformat() }}"
+        <a class="day" {{ nav(d.date, view.mode) }}
            {% if d.date == view.day %}aria-current="date"{% endif %}
-           aria-label="{{ dutch_date(d.date) }}{% if d.has_items %}, iets gepland{% endif %}">
+           aria-label="{{ day_label(d) }}">
           <span class="day-name" aria-hidden="true">{{ short_weekday(d.date) }}</span>
           <span class="day-num{% if d.date == today %} is-today{% endif %}" aria-hidden="true">{{ d.date.day }}</span>
           <span class="day-dot{% if d.has_items %} has-items{% endif %}" aria-hidden="true"></span>
@@ -27,12 +72,8 @@
       </li>
       {% endfor %}
     </ul>
-    <a class="week-arrow" href="/planning?dag={{ view.next_week.isoformat() }}"
-       hx-get="/planning/inhoud?dag={{ view.next_week.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML"
-       hx-push-url="/planning?dag={{ view.next_week.isoformat() }}" aria-label="Volgende week">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
-    </a>
   </nav>
+  {% endif %}
 
   <section aria-labelledby="day-title">
     <h2 class="section-title" id="day-title">{{ dutch_date(view.day)|capitalize }}</h2>
