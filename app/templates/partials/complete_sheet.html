@@ -43,6 +43,14 @@
     {% endif %}
 
     <div class="field">
+      <label class="label" for="cost">Kosten <span class="label-note">(optioneel)</span></label>
+      <div class="inline-fields">
+        <span aria-hidden="true">€</span>
+        <input class="input input-money" id="cost" name="cost" inputmode="decimal" autocomplete="off" placeholder="0,00" value="{{ cost }}">
+      </div>
+    </div>
+
+    <div class="field">
       <label class="label" for="note">Notitie</label>
       <input class="input" id="note" name="note" maxlength="500" placeholder="Optioneel" value="{{ note }}">
     </div>
