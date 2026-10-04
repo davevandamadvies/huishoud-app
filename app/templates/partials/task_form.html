@@ -80,41 +80,6 @@
       {% with field="interval_every" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
-    <details class="field winter-field"{% if values.winter_every or errors.get("winter_every") %} open{% endif %}>
-      <summary class="label">Ander interval in de winter <span class="label-note">(optioneel)</span></summary>
-      <div class="stack-sm">
-        <div class="inline-fields">
-          <label class="visually-hidden" for="winter_every">Winterinterval</label>
-          <span>Elke</span>
-          <input class="input input-number" id="winter_every" name="winter_every" type="number" inputmode="numeric" min="1" max="3650" value="{{ values.winter_every or '' }}"{{ invalid("winter_every") }}>
-          <span>(zelfde eenheid)</span>
-        </div>
-        <div class="day-picker month-picker" role="group" aria-label="Wintermaanden">
-          {% for abbr in month_abbr %}
-          <label class="day-chip">
-            <input type="checkbox" name="winter_month" value="{{ loop.index }}"{% if loop.index|string in (values.winter_month or []) %} checked{% endif %}>
-            <span>{{ abbr }}</span>
-          </label>
-          {% endfor %}
-        </div>
-        <p class="hint">Bijvoorbeeld planten: elke 7 dagen, in de winter elke 14. Het interval van de maand waarin je afvinkt telt.</p>
-      </div>
-      {% with field="winter_every" %}{% include "partials/field_error.html" %}{% endwith %}
-    </details>
-
-    <fieldset class="field">
-      <legend class="label">Seizoen <span class="label-note">(optioneel, niets gekozen = het hele jaar)</span></legend>
-      <div class="day-picker month-picker">
-        {% for abbr in month_abbr %}
-        <label class="day-chip">
-          <input type="checkbox" name="season" value="{{ loop.index }}"{% if loop.index|string in (values.season or []) %} checked{% endif %}>
-          <span>{{ abbr }}</span>
-        </label>
-        {% endfor %}
-      </div>
-      <p class="hint">Buiten het seizoen schuift de taak door naar het begin van het volgende seizoen en komen er geen herinneringen.</p>
-    </fieldset>
-
     <div class="field first-reminder-field">
       <label class="label" for="first_reminder_days">Eerste herinnering <span class="label-note">(optioneel)</span></label>
       <div class="inline-fields">
@@ -183,6 +148,36 @@
       <label class="label" for="notes">Notities <span class="label-note">(optioneel)</span></label>
       <textarea class="input textarea" id="notes" name="notes" rows="3" maxlength="2000"{{ invalid("notes") }}>{{ values.notes or '' }}</textarea>
       {% with field="notes" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field month-plan">
+      <label class="switch-row">
+        <span>
+          <span class="label">Andere frequentie per maand</span>
+          <span class="hint">Bijvoorbeeld een pauze in de winter, of planten minder vaak water.</span>
+        </span>
+        <input class="switch-input" type="checkbox" role="switch" name="month_plan" value="1"{% if values.month_plan or errors.get("month_plan") %} checked{% endif %}>
+      </label>
+      <div class="month-plan-body">
+        <div class="month-chips" role="group" aria-label="Stand per maand">
+          {% for abbr in month_abbr %}
+          {% set state = values.get("month_%d" % loop.index) or "gewoon" %}
+          <button class="month-chip" type="button" data-month-chip data-state="{{ state }}" data-name="{{ month_names[loop.index0] }}" aria-label="{{ month_names[loop.index0] }}: {{ state }}">{{ abbr }}</button>
+          <input type="hidden" name="month_{{ loop.index }}" value="{{ state }}">
+          {% endfor %}
+        </div>
+        <ul class="month-legend" aria-hidden="true">
+          <li><span class="month-chip-mini" data-state="gewoon"></span>gewoon</li>
+          <li><span class="month-chip-mini" data-state="anders"></span>andere frequentie</li>
+          <li><span class="month-chip-mini" data-state="pauze"></span>pauze</li>
+        </ul>
+        <p class="hint">Tik op een maand om te wisselen. In een pauzemaand schuift de taak door naar de eerste actieve maand en komen er geen herinneringen.</p>
+        <div class="field alt-field">
+          <label class="label" for="alt_every">Andere frequentie <span class="label-note">(elke …, zelfde eenheid als hierboven)</span></label>
+          <input class="input input-number" id="alt_every" name="alt_every" type="number" inputmode="numeric" min="1" max="3650" value="{{ values.alt_every or '' }}"{{ invalid("month_plan") }}>
+        </div>
+      </div>
+      {% with field="month_plan" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
 
     <button class="button" type="submit">{{ "Opslaan" if task else "Taak toevoegen" }}</button>

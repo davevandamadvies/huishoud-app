@@ -31,8 +31,8 @@ from app.db import get_db
 from app.forms import Form, FormData
 from app.models import Occurrence, OccurrenceStatus, Role, Task, User, UserStatus
 from app.recurrence import (
-    DEFAULT_WINTER,
     MONTH_ABBR,
+    MONTH_NAMES,
     IntervalUnit,
     RecurrenceType,
     describe,
@@ -145,6 +145,7 @@ def _form_context(
         vehicles=vehicles.list_vehicles(db),
         format_km=vehicles.format_km,
         month_abbr=MONTH_ABBR,
+        month_names=MONTH_NAMES,
         recurrence_labels=RECURRENCE_LABELS,
         unit_labels=UNIT_LABELS,
         page_title=task.name if task else "Nieuwe taak",
@@ -153,6 +154,25 @@ def _form_context(
         cost_totals=money.task_totals(db, task, today().year) if task else (0, 0),
         pending=tasks.pending_occurrence(db, task) if task else None,
     )
+
+
+def _month_plan_values(task: Task) -> dict:
+    """Standen per maand voor het blok 'Andere frequentie per maand'."""
+    season = task.season
+    other = task.rule.winter_months if task.winter_every else frozenset()
+    values: dict = {
+        "month_plan": "1" if (season or task.winter_every) else "",
+        "alt_every": str(task.winter_every or ""),
+    }
+    for month in range(1, 13):
+        if season is not None and month not in season:
+            state = "pauze"
+        elif month in other:
+            state = "anders"
+        else:
+            state = "gewoon"
+        values[f"month_{month}"] = state
+    return values
 
 
 def _values_from_task(db: Session, task: Task) -> dict:
@@ -172,9 +192,7 @@ def _values_from_task(db: Session, task: Task) -> dict:
         if pending and (pending.time_due_date or pending.due_date)
         else "",
         "km_interval": str(task.km_interval or ""),
-        "season": [str(m) for m in sorted(task.season or ())],
-        "winter_every": str(task.winter_every or ""),
-        "winter_month": [str(m) for m in sorted(task.rule.winter_months)],
+        **_month_plan_values(task),
     }
 
 
@@ -193,7 +211,6 @@ def new_page(request: Request, user: CurrentUser, db: DB) -> HTMLResponse:
         "interval_every": "7",
         "interval_unit": IntervalUnit.DAYS.value,
         "category_id": str(first_category.id) if first_category else "",
-        "winter_month": [str(m) for m in sorted(DEFAULT_WINTER)],
     }
     context = _form_context(db, user, task=None, values=values)
     return templates.TemplateResponse(request, "pages/task_form.html", context)
@@ -204,10 +221,7 @@ def create(request: Request, user: CurrentUser, db: DB, form: Form) -> Response:
     try:
         data = tasks.parse_form(db, form)
     except tasks.TaskFormError as exc:
-        values = {k: form.get_str(k) for k in form} | {
-            "season": form.get_all("season"),
-            "winter_month": form.get_all("winter_month"),
-        }
+        values = {k: form.get_str(k) for k in form}
         context = _form_context(db, user, task=None, values=values, errors=exc.errors)
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     tasks.create(db, user, data)
@@ -231,10 +245,7 @@ def update(
     try:
         data = tasks.parse_form(db, form)
     except tasks.TaskFormError as exc:
-        values = {k: form.get_str(k) for k in form} | {
-            "season": form.get_all("season"),
-            "winter_month": form.get_all("winter_month"),
-        }
+        values = {k: form.get_str(k) for k in form}
         context = _form_context(db, user, task=task, values=values, errors=exc.errors)
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     tasks.update(db, user, task, data)

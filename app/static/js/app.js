@@ -194,6 +194,22 @@
     if (event.detail.target.id === "push-panel") initPush();
   });
 
+  // Andere frequentie per maand: tik wisselt gewoon -> anders -> pauze.
+  document.addEventListener("click", function (event) {
+    var chip = event.target.closest("[data-month-chip]");
+    if (!chip) return;
+    var form = chip.closest("form");
+    var recurrence = form && form.querySelector("input[name='recurrence_type']:checked");
+    var states = recurrence && recurrence.value !== "interval"
+      ? ["gewoon", "pauze"]
+      : ["gewoon", "anders", "pauze"];
+    var next = states[(states.indexOf(chip.dataset.state) + 1) % states.length];
+    chip.dataset.state = next;
+    chip.setAttribute("aria-label", chip.dataset.name + ": " + next);
+    var input = chip.nextElementSibling;
+    if (input && input.type === "hidden") input.value = next;
+  });
+
   // Service worker registreren (voor meldingen en de offline-pagina).
   if ("serviceWorker" in navigator && window.isSecureContext) {
     window.addEventListener("load", function () {
