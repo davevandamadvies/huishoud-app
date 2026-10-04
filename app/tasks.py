@@ -10,7 +10,13 @@ from app import audit, categories, vehicles
 from app.db import utcnow
 from app.forms import FormData
 from app.models import Category, Occurrence, OccurrenceStatus, Task, User, Vehicle
-from app.recurrence import IntervalUnit, RecurrenceType, format_months, into_season
+from app.recurrence import (
+    DEFAULT_WINTER,
+    IntervalUnit,
+    RecurrenceType,
+    format_months,
+    into_season,
+)
 
 PENDING = (OccurrenceStatus.OPEN, OccurrenceStatus.PLANNED)
 FINISHED = (OccurrenceStatus.DONE, OccurrenceStatus.SKIPPED)
@@ -43,6 +49,8 @@ class TaskInput:
     vehicle_id: int | None = None
     km_interval: int | None = None
     season_months: str | None = None
+    winter_every: int | None = None
+    winter_months: str | None = None
 
     def audit_dict(self) -> dict:
         return {
@@ -58,6 +66,8 @@ class TaskInput:
             "vehicle_id": self.vehicle_id,
             "km_interval": self.km_interval,
             "season_months": self.season_months,
+            "winter_every": self.winter_every,
+            "winter_months": self.winter_months,
         }
 
 
@@ -153,6 +163,25 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
     }
     season_months = format_months(season)
 
+    winter_every: int | None = None
+    winter_months: str | None = None
+    raw_winter = form.get_str("winter_every")
+    if raw_winter and recurrence == RecurrenceType.INTERVAL:
+        winter_every = _int(raw_winter)
+        if winter_every is None or not 1 <= winter_every <= 3650:
+            errors["winter_every"] = "Winter: een heel getal vanaf 1, of leeg."
+        months = {
+            int(m)
+            for m in form.get_all("winter_month")
+            if m.isdigit() and 1 <= int(m) <= 12
+        }
+        if not months:
+            errors["winter_every"] = "Kies minstens één wintermaand."
+        elif len(months) == 12:
+            errors["winter_every"] = "De winter kan niet het hele jaar zijn."
+        elif months != set(DEFAULT_WINTER):
+            winter_months = format_months(months)
+
     notes = form.get_str("notes") or None
     if notes and len(notes) > 2000:
         errors["notes"] = "Notities mogen maximaal 2000 tekens zijn."
@@ -181,6 +210,8 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         vehicle_id=vehicle_id,
         km_interval=km_interval,
         season_months=season_months,
+        winter_every=winter_every,
+        winter_months=winter_months,
     )
 
 
@@ -254,6 +285,8 @@ def _apply(task: Task, data: TaskInput) -> None:
     task.vehicle_id = data.vehicle_id
     task.km_interval = data.km_interval
     task.season_months = data.season_months
+    task.winter_every = data.winter_every
+    task.winter_months = data.winter_months
 
 
 def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
@@ -408,6 +441,8 @@ def _audit_snapshot(task: Task, next_date: date | None) -> dict:
         "vehicle_id": task.vehicle_id,
         "km_interval": task.km_interval,
         "season_months": task.season_months,
+        "winter_every": task.winter_every,
+        "winter_months": task.winter_months,
         "next_date": _iso(next_date),
     }
 

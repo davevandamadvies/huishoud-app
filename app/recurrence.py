@@ -5,6 +5,8 @@
 - vaste datum: de vervaldatum ligt vast (bijv. APK). Volgende = oude
   vervaldatum + interval, zo vaak als nodig tot ná de afvinkdatum.
 - eenmalig: geen volgende keer.
+- winterinterval: bij een gewoon interval kan in de wintermaanden (standaard
+  nov–feb) een ander interval gelden; het interval van de afvinkmaand telt.
 - seizoen: valt de volgende datum buiten de actieve maanden, dan schuift
   hij naar de 1e van de eerste maand van het volgende seizoen.
 """
@@ -27,16 +29,30 @@ class IntervalUnit(StrEnum):
     MONTHS = "months"
 
 
+DEFAULT_WINTER = frozenset({11, 12, 1, 2})
+
+
 @dataclass(frozen=True)
 class Rule:
     type: RecurrenceType
     every: int | None = None
     unit: IntervalUnit = IntervalUnit.DAYS
+    winter_every: int | None = None
+    winter_months: frozenset[int] = DEFAULT_WINTER
 
     def __post_init__(self) -> None:
         repeating = self.type != RecurrenceType.ONCE
         if repeating and (self.every is None or self.every < 1):
             raise ValueError("Een herhalende taak heeft een interval van minimaal 1.")
+
+    def every_on(self, day: date) -> int:
+        """Interval dat geldt bij afvinken op `day` (winter of niet)."""
+        winter = (
+            self.type == RecurrenceType.INTERVAL
+            and self.winter_every
+            and day.month in self.winter_months
+        )
+        return (self.winter_every if winter else self.every) or 1
 
 
 def add_interval(start: date, every: int, unit: IntervalUnit) -> date:
@@ -66,7 +82,9 @@ def _next_due(rule: Rule, completed_on: date, previous_due: date | None) -> date
     if rule.type == RecurrenceType.ONCE:
         return None
     every = rule.every or 1  # altijd gezet voor herhalende regels
-    if rule.type == RecurrenceType.INTERVAL or previous_due is None:
+    if rule.type == RecurrenceType.INTERVAL:
+        return add_interval(completed_on, rule.every_on(completed_on), rule.unit)
+    if previous_due is None:
         return add_interval(completed_on, every, rule.unit)
     # Vaste datum: blijf op het ritme van de vorige vervaldatum. Er wordt steeds
     # vanaf die datum geteld (niet stap voor stap), zodat een gemiste periode
@@ -173,6 +191,11 @@ _SINGULAR = {
     IntervalUnit.WEEKS: "Elke week",
     IntervalUnit.MONTHS: "Elke maand",
 }
+_UNIT_ONE = {
+    IntervalUnit.DAYS: "dag",
+    IntervalUnit.WEEKS: "week",
+    IntervalUnit.MONTHS: "maand",
+}
 _PLURAL = {
     IntervalUnit.DAYS: "dagen",
     IntervalUnit.WEEKS: "weken",
@@ -193,4 +216,12 @@ def describe(rule: Rule) -> str:
         text = f"Elke {n} {_PLURAL[unit]}"
     if rule.type == RecurrenceType.FIXED_DATE:
         text += " (vaste datum)"
+    elif rule.winter_every:
+        unit = _PLURAL[rule.unit] if rule.winter_every != 1 else _UNIT_ONE[rule.unit]
+        months = (
+            ""
+            if rule.winter_months == DEFAULT_WINTER
+            else f" ({describe_season(rule.winter_months)})"
+        )
+        text += f" · winter{months} elke {rule.winter_every} {unit}"
     return text

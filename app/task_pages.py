@@ -16,6 +16,7 @@ from app.db import get_db
 from app.forms import Form, FormData
 from app.models import Occurrence, OccurrenceStatus, Role, Task, User, UserStatus
 from app.recurrence import (
+    DEFAULT_WINTER,
     MONTH_ABBR,
     IntervalUnit,
     RecurrenceType,
@@ -155,6 +156,8 @@ def _values_from_task(db: Session, task: Task) -> dict:
         else "",
         "km_interval": str(task.km_interval or ""),
         "season": [str(m) for m in sorted(task.season or ())],
+        "winter_every": str(task.winter_every or ""),
+        "winter_month": [str(m) for m in sorted(task.rule.winter_months)],
     }
 
 
@@ -173,6 +176,7 @@ def new_page(request: Request, user: CurrentUser, db: DB) -> HTMLResponse:
         "interval_every": "7",
         "interval_unit": IntervalUnit.DAYS.value,
         "category_id": str(first_category.id) if first_category else "",
+        "winter_month": [str(m) for m in sorted(DEFAULT_WINTER)],
     }
     context = _form_context(db, user, task=None, values=values)
     return templates.TemplateResponse(request, "pages/task_form.html", context)
@@ -183,7 +187,10 @@ def create(request: Request, user: CurrentUser, db: DB, form: Form) -> Response:
     try:
         data = tasks.parse_form(db, form)
     except tasks.TaskFormError as exc:
-        values = {k: form.get_str(k) for k in form} | {"season": form.get_all("season")}
+        values = {k: form.get_str(k) for k in form} | {
+            "season": form.get_all("season"),
+            "winter_month": form.get_all("winter_month"),
+        }
         context = _form_context(db, user, task=None, values=values, errors=exc.errors)
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     tasks.create(db, user, data)
@@ -207,7 +214,10 @@ def update(
     try:
         data = tasks.parse_form(db, form)
     except tasks.TaskFormError as exc:
-        values = {k: form.get_str(k) for k in form} | {"season": form.get_all("season")}
+        values = {k: form.get_str(k) for k in form} | {
+            "season": form.get_all("season"),
+            "winter_month": form.get_all("winter_month"),
+        }
         context = _form_context(db, user, task=task, values=values, errors=exc.errors)
         return templates.TemplateResponse(request, "partials/task_form.html", context)
     tasks.update(db, user, task, data)
