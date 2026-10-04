@@ -1,15 +1,23 @@
 """Voertuigen en kilometerstanden (fase 5)."""
 
+import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from app import audit
 from app.dates import today
 from app.db import utcnow
-from app.models import OdometerReading, Task, User, Vehicle
+from app.models import (
+    Occurrence,
+    OccurrenceStatus,
+    OdometerReading,
+    Task,
+    User,
+    Vehicle,
+)
 
 MAX_KM = 2_000_000
 STALE_AFTER_DAYS = 30
@@ -165,6 +173,7 @@ def add_reading(
         object_id=vehicle.id,
         new={"km": km, "read_on": read_on.isoformat()},
     )
+    refresh_due_dates(db, vehicle)
     if commit:
         db.commit()
     return reading
@@ -203,12 +212,14 @@ class Reminder:
 
 
 def needing_update(db: Session, day: date | None = None) -> list[Reminder]:
-    """Voertuigen met actieve taken waarvan de stand ouder is dan 30 dagen."""
+    """Voertuigen met km-taken waarvan de stand ouder is dan 30 dagen."""
     day = day or today()
     with_tasks = set(
         db.scalars(
             select(Task.vehicle_id).where(
-                Task.vehicle_id.is_not(None), Task.archived_at.is_(None)
+                Task.vehicle_id.is_not(None),
+                Task.km_interval.is_not(None),
+                Task.archived_at.is_(None),
             )
         )
     )
@@ -220,3 +231,99 @@ def needing_update(db: Session, day: date | None = None) -> list[Reminder]:
         if last is None or (day - last.read_on).days > STALE_AFTER_DAYS:
             result.append(Reminder(vehicle, last))
     return result
+
+
+# ---- Herhaling op kilometers óf tijd (wat het eerst komt) ----
+
+
+def estimate_date(db: Session, vehicle: Vehicle, due_km: int) -> date | None:
+    """Wanneer de km-grens naar verwachting wordt bereikt (of None)."""
+    last = latest(db, vehicle)
+    if last is None:
+        return None
+    if last.km >= due_km:
+        return last.read_on
+    rate = km_per_day(db, vehicle)
+    if not rate:
+        return None
+    return last.read_on + timedelta(days=math.ceil((due_km - last.km) / rate))
+
+
+def apply_km_due(db: Session, occurrence: Occurrence) -> None:
+    """Zet de vervaldatum op de vroegste van tijd en geschatte km-datum."""
+    task = occurrence.task
+    if occurrence.due_km is None or task.vehicle is None:
+        return
+    estimate = estimate_date(db, task.vehicle, occurrence.due_km)
+    time_due = occurrence.time_due_date
+    candidates = [d for d in (time_due, estimate) if d is not None]
+    occurrence.due_date = min(candidates) if candidates else None
+
+
+def refresh_due_dates(db: Session, vehicle: Vehicle) -> None:
+    """Na een nieuwe stand: km-vervaldata van openstaande taken bijwerken."""
+    pending = db.scalars(
+        select(Occurrence)
+        .join(Task, Task.id == Occurrence.task_id)
+        .where(
+            Task.vehicle_id == vehicle.id,
+            Occurrence.due_km.is_not(None),
+            Occurrence.status.in_((OccurrenceStatus.OPEN, OccurrenceStatus.PLANNED)),
+        )
+    )
+    for occurrence in pending:
+        apply_km_due(db, occurrence)
+
+
+def start_km_count(
+    db: Session, task: Task, occurrence: Occurrence, base_km: int | None
+) -> None:
+    """Km-grens voor een nieuwe of bijgewerkte openstaande uitvoering."""
+    if task.km_interval is None or task.vehicle is None:
+        if occurrence.due_km is not None:
+            occurrence.due_km = None
+            occurrence.due_date = occurrence.time_due_date or occurrence.due_date
+            occurrence.time_due_date = None
+        return
+    if base_km is None:
+        occurrence.due_km = None
+        return
+    if occurrence.time_due_date is None:
+        occurrence.time_due_date = occurrence.due_date
+    occurrence.due_km = base_km + task.km_interval
+    apply_km_due(db, occurrence)
+
+
+def last_done_km(db: Session, task: Task) -> int | None:
+    """Kilometerstand van de laatste uitvoering met een stand."""
+    return db.scalar(
+        select(Occurrence.km)
+        .where(
+            Occurrence.task_id == task.id,
+            Occurrence.status == OccurrenceStatus.DONE,
+            Occurrence.km.is_not(None),
+        )
+        .order_by(Occurrence.completed_on.desc(), Occurrence.id.desc())
+        .limit(1)
+    )
+
+
+def km_left(occurrence: Occurrence) -> int | None:
+    """Hoeveel km nog tot de grens (negatief = voorbij), of None."""
+    task = occurrence.task
+    if occurrence.due_km is None or task.vehicle is None:
+        return None
+    db = object_session(occurrence)
+    if db is None:
+        return None
+    last = latest(db, task.vehicle)
+    return None if last is None else occurrence.due_km - last.km
+
+
+def km_left_label(occurrence: Occurrence) -> str | None:
+    left = km_left(occurrence)
+    if left is None:
+        return None
+    if left <= 0:
+        return "km-grens bereikt"
+    return f"nog ~{format_km(left)}"

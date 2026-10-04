@@ -6,7 +6,7 @@ from datetime import date
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app import audit, categories
+from app import audit, categories, vehicles
 from app.db import utcnow
 from app.forms import FormData
 from app.models import Category, Occurrence, OccurrenceStatus, Task, User, Vehicle
@@ -41,6 +41,7 @@ class TaskInput:
     next_date: date | None
     first_reminder_days: int | None = None
     vehicle_id: int | None = None
+    km_interval: int | None = None
 
     def audit_dict(self) -> dict:
         return {
@@ -54,6 +55,7 @@ class TaskInput:
             "notes": self.notes,
             "first_reminder_days": self.first_reminder_days,
             "vehicle_id": self.vehicle_id,
+            "km_interval": self.km_interval,
         }
 
 
@@ -137,6 +139,13 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         if vehicle is None:
             errors["vehicle_id"] = "Kies een voertuig of geen."
 
+    km_interval: int | None = None
+    raw_km = form.get_str("km_interval").replace(".", "").replace(" ", "")
+    if raw_km and vehicle_id is not None and recurrence == RecurrenceType.INTERVAL:
+        km_interval = _int(raw_km)
+        if km_interval is None or not 100 <= km_interval <= 500_000:
+            errors["km_interval"] = "Kilometers: een heel getal van 100 tot 500.000."
+
     notes = form.get_str("notes") or None
     if notes and len(notes) > 2000:
         errors["notes"] = "Notities mogen maximaal 2000 tekens zijn."
@@ -163,6 +172,7 @@ def parse_form(db: Session, form: FormData) -> TaskInput:
         next_date=next_date,
         first_reminder_days=first_reminder,
         vehicle_id=vehicle_id,
+        km_interval=km_interval,
     )
 
 
@@ -234,6 +244,7 @@ def _apply(task: Task, data: TaskInput) -> None:
     task.notes = data.notes
     task.first_reminder_days = data.first_reminder_days
     task.vehicle_id = data.vehicle_id
+    task.km_interval = data.km_interval
 
 
 def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
@@ -251,12 +262,37 @@ def _set_next_date(db: Session, task: Task, next_date: date | None) -> None:
         pending.due_date = next_date
 
 
+def _time_due(occurrence: Occurrence | None) -> date | None:
+    """Vervaldatum volgens de tijd (bij km-of-tijd zonder de km-schatting)."""
+    if occurrence is None:
+        return None
+    return occurrence.time_due_date or occurrence.due_date
+
+
+def _sync_km(
+    db: Session, task: Task, next_date: date | None, old_interval: int | None = None
+) -> None:
+    """Km-of-tijd bijwerken na het opslaan van de taak."""
+    db.flush()
+    db.refresh(task, ["vehicle"])
+    pending = pending_occurrence(db, task)
+    if pending is None:
+        return
+    if pending.due_km is not None or task.km_interval:
+        pending.time_due_date = next_date
+        base = vehicles.last_done_km(db, task)
+        if base is None and pending.due_km is not None and old_interval:
+            base = pending.due_km - old_interval
+        vehicles.start_km_count(db, task, pending, base)
+
+
 def create(db: Session, actor: User, data: TaskInput) -> Task:
     task = Task()
     _apply(task, data)
     db.add(task)
     db.flush()
     _set_next_date(db, task, data.next_date)
+    _sync_km(db, task, data.next_date)
     new = data.audit_dict() | {"next_date": _iso(data.next_date)}
     audit.record(
         db, "task.create", actor=actor, object_type="task", object_id=task.id, new=new
@@ -267,9 +303,11 @@ def create(db: Session, actor: User, data: TaskInput) -> Task:
 
 def update(db: Session, actor: User, task: Task, data: TaskInput) -> None:
     pending = pending_occurrence(db, task)
-    old = _audit_snapshot(task, pending.due_date if pending else None)
+    old = _audit_snapshot(task, _time_due(pending))
+    old_interval = task.km_interval
     _apply(task, data)
     _set_next_date(db, task, data.next_date)
+    _sync_km(db, task, data.next_date, old_interval)
     new = data.audit_dict() | {"next_date": _iso(data.next_date)}
     if old != new:
         audit.record(
@@ -347,6 +385,7 @@ def _audit_snapshot(task: Task, next_date: date | None) -> dict:
         "notes": task.notes,
         "first_reminder_days": task.first_reminder_days,
         "vehicle_id": task.vehicle_id,
+        "km_interval": task.km_interval,
         "next_date": _iso(next_date),
     }
 

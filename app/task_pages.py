@@ -141,9 +141,10 @@ def _values_from_task(db: Session, task: Task) -> dict:
         "notes": task.notes or "",
         "first_reminder_days": str(task.first_reminder_days or ""),
         "vehicle_id": str(task.vehicle_id or ""),
-        "next_date": pending.due_date.isoformat()
-        if pending and pending.due_date
+        "next_date": (pending.time_due_date or pending.due_date).isoformat()
+        if pending and (pending.time_due_date or pending.due_date)
         else "",
+        "km_interval": str(task.km_interval or ""),
     }
 
 

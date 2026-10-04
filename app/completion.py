@@ -101,6 +101,17 @@ def complete(
         next_occurrence = Occurrence(task_id=task.id, due_date=next_date)
         db.add(next_occurrence)
         db.flush()
+        if task.km_interval and task.vehicle is not None:
+            # Km-of-tijd: tel vanaf de stand bij afvinken, anders de laatst bekende.
+            last = vehicles.latest(db, task.vehicle)
+            base_km = (
+                occurrence.km
+                if occurrence.km is not None
+                else (last.km if last else None)
+            )
+            next_occurrence.time_due_date = next_date
+            vehicles.start_km_count(db, task, next_occurrence, base_km)
+            next_date = next_occurrence.due_date
 
     audit.record(
         db,
