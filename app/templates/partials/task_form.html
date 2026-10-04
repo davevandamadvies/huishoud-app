@@ -23,6 +23,9 @@
     <div>
       <div class="label">Volgende keer</div>
       <div class="due-{{ tone }}">{{ label }}</div>
+      {% set km = km_left_label(pending) if pending else None %}
+      {% if km %}<div class="item-meta">{{ km }}</div>
+      {% elif task.km_interval and task.vehicle and pending and pending.due_km is none %}<div class="item-meta">km-telling start na afvinken met kilometerstand</div>{% endif %}
     </div>
     <div class="card-actions">
       <button class="button button-compact" type="button" hx-get="/taken/{{ task.id }}/afronden?na=refresh" hx-target="#sheet" hx-swap="innerHTML">Afvinken</button>
@@ -116,6 +119,16 @@
         {% endif %}
       </select>
       {% with field="vehicle_id" %}{% include "partials/field_error.html" %}{% endwith %}
+    </div>
+
+    <div class="field km-field">
+      <label class="label" for="km_interval">Of elke <span class="label-note">(km, optioneel)</span></label>
+      <div class="inline-fields">
+        <input class="input input-km" id="km_interval" name="km_interval" inputmode="numeric" autocomplete="off" placeholder="15000" value="{{ values.km_interval or '' }}"{{ invalid("km_interval") }}>
+        <span>km</span>
+      </div>
+      <p class="hint">Wat het eerst komt: de tijd of de kilometers. De km-teller start bij de eerste keer afvinken met een kilometerstand.</p>
+      {% with field="km_interval" %}{% include "partials/field_error.html" %}{% endwith %}
     </div>
     {% endif %}
 

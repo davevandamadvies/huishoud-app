@@ -19,7 +19,7 @@ from app.db import Base, UTCDateTime, utcnow
 from app.models.category import Category
 from app.models.user import User
 from app.models.vehicle import Vehicle
-from app.recurrence import IntervalUnit, RecurrenceType, Rule
+from app.recurrence import IntervalUnit, RecurrenceType, Rule, describe
 
 
 def _enum(enum_cls: type[StrEnum], name: str) -> Enum:
@@ -70,6 +70,8 @@ class Task(Base):
     vehicle_id: Mapped[int | None] = mapped_column(
         ForeignKey("vehicles.id", ondelete="SET NULL")
     )
+    # Of elke zoveel km (wat het eerst komt); alleen met een voertuig.
+    km_interval: Mapped[int | None] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(Text)
     archived_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
@@ -88,6 +90,14 @@ class Task(Base):
     @property
     def is_archived(self) -> bool:
         return self.archived_at is not None
+
+    @property
+    def recurrence_text(self) -> str:
+        """Bijv. 'Jaarlijks of elke 15.000 km'."""
+        text = describe(self.rule)
+        if self.km_interval and self.vehicle_id:
+            text += f" of elke {self.km_interval:,} km".replace(",", ".")
+        return text
 
 
 class OccurrenceStatus(StrEnum):
@@ -127,6 +137,10 @@ class Occurrence(Base):
     note: Mapped[str | None] = mapped_column(Text)
     cost_cents: Mapped[int | None] = mapped_column(Integer)
     km: Mapped[int | None] = mapped_column(Integer)  # kilometerstand bij afvinken
+    # Km-of-tijd: de km-grens en de vervaldatum volgens alleen de tijd. De
+    # vervaldatum (due_date) is de vroegste van tijd en geschatte km-datum.
+    due_km: Mapped[int | None] = mapped_column(Integer)
+    time_due_date: Mapped[date | None] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
     task: Mapped[Task] = relationship()

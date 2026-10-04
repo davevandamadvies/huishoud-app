@@ -8,7 +8,7 @@
         <span class="dot cat-{{ t.category.color }}" aria-hidden="true"></span>
         <span class="item-body">
           <span class="item-title">{{ t.name }}</span>
-          <span class="item-meta"><span>{{ t.category.name }}</span><span>· {{ describe(t.rule)|lower }}</span></span>
+          <span class="item-meta"><span>{{ t.category.name }}</span><span>· {{ t.recurrence_text|lower }}</span></span>
         </span>
       </button>
     </li>

@@ -9,8 +9,9 @@
         <div class="item-body">
           <div class="item-title">{{ row.task.name }}</div>
           <div class="item-meta">
-            <span>{{ describe(row.task.rule) }}</span>
+            <span>{{ row.task.recurrence_text }}</span>
             {% if row.task.owner %}<span>· {{ row.task.owner.display_name }}</span>{% endif %}
+            {% if row.pending %}{% set km = km_left_label(row.pending) %}{% if km %}<span>· {{ km }}</span>{% endif %}{% endif %}
             <span class="visually-hidden">· {{ row.task.category.name }}</span>
           </div>
         </div>

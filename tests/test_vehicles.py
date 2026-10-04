@@ -77,7 +77,9 @@ def test_km_per_day_uses_last_year(db: Session, user: User, car: Vehicle) -> Non
 
 def test_needing_update(db: Session, user: User, car: Vehicle) -> None:
     assert vehicles.needing_update(db) == []  # geen taken
-    make_task(db, name="Olie", vehicle_id=car.id)
+    make_task(db, name="Wassen", vehicle_id=car.id)
+    assert vehicles.needing_update(db) == []  # geen km-taak
+    make_task(db, name="Olie", vehicle_id=car.id, km_interval=15000)
     assert [r.vehicle for r in vehicles.needing_update(db)] == [car]
     vehicles.add_reading(db, user, car, 1000, today() - timedelta(days=31))
     assert len(vehicles.needing_update(db)) == 1
@@ -200,7 +202,7 @@ def test_complete_via_sheet_with_km(
 
 
 def test_today_shows_update_card(client: TestClient, db: Session, car: Vehicle) -> None:
-    make_task(db, name="Olie", vehicle_id=car.id)
+    make_task(db, name="Olie", vehicle_id=car.id, km_interval=15000)
     assert "Kilometerstand Auto bijwerken" in client.get("/").text
 
 
@@ -238,4 +240,8 @@ def test_seed_links_auto_tasks(db: Session) -> None:
     assert car.name == "Auto"
     linked = set(db.scalars(select(Task.name).where(Task.vehicle_id == car.id)))
     assert "APK" in linked and "Gras maaien" not in linked
+    olie = db.scalar(
+        select(Task).where(Task.name == "Olie verversen / onderhoudsbeurt")
+    )
+    assert olie.km_interval == 15000
     assert db.scalar(select(OdometerReading)) is None

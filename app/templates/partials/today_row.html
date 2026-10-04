@@ -13,6 +13,7 @@
       {% else %}
       <span>· {{ who[0].display_name if who else "iedereen" }}</span>
       {% endif %}
+      {% set km = km_left_label(occ) %}{% if km %}<span>· {{ km }}</span>{% endif %}
       {% if occ.planned_date and kind != "late" %}
       <span>· {{ plan_label(occ.planned_date, occ.planned_time, today) }}</span>
       {% elif kind != "today" %}

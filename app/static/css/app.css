@@ -579,6 +579,16 @@ a.card-link:hover {
   outline-offset: 2px;
 }
 
+/* Km-interval alleen met een voertuig en een gewoon interval */
+.form:has(select[name="vehicle_id"] option[value=""]:checked) .km-field,
+.form:has(input[name="recurrence_type"]:not([value="interval"]):checked) .km-field {
+  display: none;
+}
+
+.inline-fields:has(> span) {
+  align-items: center;
+}
+
 /* Vanaf-wanneer-herinnering alleen bij een vaste datum */
 .first-reminder-field {
   display: none;

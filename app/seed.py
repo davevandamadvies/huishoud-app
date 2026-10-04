@@ -47,6 +47,7 @@ def seed_tasks(db: Session) -> tuple[int, int]:
             Task(
                 name=item.name,
                 vehicle=vehicle if item.category == AUTO_CATEGORY else None,
+                km_interval=item.km if item.category == AUTO_CATEGORY else None,
                 category=categories[item.category],
                 recurrence_type=RecurrenceType(item.recurrence),
                 interval_every=item.every,

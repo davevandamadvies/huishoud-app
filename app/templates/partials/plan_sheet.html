@@ -5,7 +5,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
   <div>
-    <p class="item-meta"><span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>{{ task.category.name }} · {{ describe(task.rule)|lower }}</p>
+    <p class="item-meta"><span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>{{ task.category.name }} · {{ task.recurrence_text|lower }}</p>
     <h2 class="sheet-title" id="sheet-title" tabindex="-1">{{ "Verzetten" if planned else "Inplannen" }}: {{ task.name }}</h2>
   </div>
 
