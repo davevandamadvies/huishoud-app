@@ -1,6 +1,9 @@
-/* Huishoud app – basisstijl.
-   Rustig en vriendelijk: warme achtergrond, witte lijsten met dunne randen,
-   één accentkleur (diep groen), oranje alleen voor "te laat". */
+/* Huishoud app – basisstijl "Kleurvlakken".
+   Vrolijk maar overzichtelijk: warme perzikachtergrond, elke taak als zacht
+   vlak in de kleur van zijn categorie met een symbool in volle kleur.
+   Kleur op een kaart betekent altijd de categorie. Knoppen en menu zijn
+   donkerpaars (inkt), geel is alleen voor punten en feestjes, en "te laat"
+   heeft altijd een rode rand plus een label (nooit alleen kleur). */
 
 @font-face {
   font-family: "Figtree";
@@ -24,33 +27,37 @@
 }
 
 :root {
-  /* Kleuren uit de UI-mockup ("Huishoud app – UI mockup").
-     Tekstcontrast ≥ 4.5:1 op achtergrond én oppervlak; waar de mockup
-     daaronder zat is de kleur iets donkerder gekozen (zie --color-nav). */
-  --color-bg: #fafaf8;
+  /* Kleuren uit het ontwerp "Kleurvlakken". Tekstcontrast >= 4.5:1 op
+     achtergrond, oppervlak én de zachte categorievlakken (tests/test_contrast.py). */
+  --color-bg: #faf1e7;
   --color-surface: #ffffff;
-  --color-border: #ecece7;
-  --color-divider: #f1f1ec;
-  --color-input-border: #e1e2dc;
-  --color-track: #ecece7;
-  --color-text: #1a1d1a;
-  --color-text-muted: #6a6f68;
-  --color-nav: #6a6f68;
-  --color-accent: #1f7a55;
-  --color-accent-hover: #19654a;
-  --color-accent-soft: #eef6f1;
+  --color-border: #efe3d6;
+  --color-divider: #f3e9de;
+  --color-input-border: #e3d5c6;
+  --color-track: #f0e1d1;
+  --color-text: #2a2140;
+  --color-text-muted: #5a5068;
+  --color-nav: #5f566e;
+  --color-accent: #2a2140;
+  --color-accent-hover: #3d3259;
+  --color-accent-soft: #efe8f6;
   --color-on-accent: #ffffff;
-  --color-chip-active: #1a1d1a;
-  --color-late: #b4530a;
-  --color-focus: #1f7a55;
-  /* Rand van de afvinkcirkel: >= 3:1 op wit (mockup #c8cbc4 haalde 1.6:1) */
-  --color-check-border: #8e928b;
+  --color-chip-active: #2a2140;
+  --color-late: #b8261a;
+  --color-focus: #7c59d4;
+  --color-success: #1d7a45;
+  --color-gold: #ffd166;
+  --color-gold-text: #7a5600;
+  --color-on-gold: #5a3d00;
+  --color-week-muted: #ddd5ec;
+  /* Rand van de afvinkcirkel buiten een categorie: >= 3:1 op wit */
+  --color-check-border: #8a8096;
 
   /* Personen (zachte initiaal-avatars) */
-  --avatar-1-bg: #fbe3db;
-  --avatar-1-fg: #8a3a22;
-  --avatar-2-bg: #dcefea;
-  --avatar-2-fg: #1f5f52;
+  --avatar-1-bg: #ffd166;
+  --avatar-1-fg: #5a3d00;
+  --avatar-2-bg: #a8e6cf;
+  --avatar-2-fg: #0f4a3a;
   --avatar-3-bg: #e3e8fa;
   --avatar-3-fg: #33478f;
   --avatar-4-bg: #f6ecd3;
@@ -63,10 +70,12 @@
   /* Meldingen */
   --color-error: #a8321f;
   --color-error-soft: #fbe9e5;
-  --color-success-soft: #eef6f1;
+  --color-success-soft: #e3f4e9;
 
   /* Vorm en ruimte */
   --radius-list: 20px;
+  --radius-card: 20px;
+  --radius-tile: 15px;
   --radius-control: 16px;
   --radius-input: 14px;
   --radius-pill: 999px;
@@ -175,13 +184,14 @@ textarea {
 .page-eyebrow {
   margin: 0;
   font-size: var(--text-md);
+  font-weight: 700;
   color: var(--color-text-muted);
 }
 
 .page-title {
   margin-top: 2px;
   font-size: var(--text-title);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.02em;
 }
 
@@ -192,9 +202,18 @@ textarea {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: 0 0 var(--space-2) var(--space-1);
-  font-size: var(--text-base);
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.section-title svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
 }
 
 .section-title.late {
@@ -241,8 +260,8 @@ textarea {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 2px;
-  font-size: var(--text-sm);
+  margin-top: 3px;
+  font-size: var(--text-md);
   color: var(--color-text-muted);
 }
 
@@ -274,8 +293,24 @@ textarea {
   text-align: center;
   color: var(--color-text-muted);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-list);
+  border-radius: 24px;
+}
+
+.empty-sun {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: var(--space-3);
+  color: var(--color-gold-text);
+  background: var(--color-gold);
+  border-radius: 50%;
+}
+
+.empty-sun svg {
+  width: 46px;
+  height: 46px;
 }
 
 .empty-state strong {
@@ -681,7 +716,7 @@ fieldset.field {
 }
 
 .alert-success {
-  color: var(--color-accent);
+  color: var(--color-success);
   background: var(--color-success-soft);
 }
 
@@ -868,6 +903,12 @@ a.chip {
   inset: -5px 0;
 }
 
+.chip:has(.cat-tile) {
+  padding-left: 6px;
+  background: var(--cat-soft);
+  border-color: transparent;
+}
+
 .chip[aria-pressed="true"],
 .chip[aria-current="true"] {
   color: var(--color-on-accent);
@@ -882,108 +923,427 @@ a.chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   color: var(--color-on-accent);
   background: var(--color-accent);
   border: 0;
-  border-radius: 50%;
-  box-shadow: 0 6px 16px rgb(31 122 85 / 25%);
+  border-radius: 20px;
+  box-shadow: 0 8px 18px rgb(42 33 64 / 35%);
 }
 
 .fab:hover {
   background: var(--color-accent-hover);
 }
 
-/* ---- Voortgang ---- */
+/* ---- Voortgang: donkere weekkaart met ring ---- */
 
-.week {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.week-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-1) 14px;
+  padding: var(--space-4);
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border-radius: 24px;
 }
 
-.week-summary {
+.week-ring {
+  position: relative;
+  grid-row: span 2;
+  width: 64px;
+  height: 64px;
+}
+
+.week-ring svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.ring-track,
+.ring-fill {
+  fill: none;
+  stroke-width: 4.5;
+}
+
+.ring-track {
+  stroke: rgb(255 255 255 / 18%);
+}
+
+.ring-fill {
+  stroke: var(--color-gold);
+  stroke-linecap: round;
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-md);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.week-text {
+  margin: 0;
   font-size: var(--text-base);
 }
 
-.week-summary .muted {
-  font-size: var(--text-sm);
-}
-
-.progress {
+.week-text strong {
   display: block;
-  width: 100%;
-  height: 6px;
-  appearance: none;
-  border: 0;
-  background: var(--color-track);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
+  font-size: 1.375rem;
+  font-weight: 800;
 }
 
-.progress::-webkit-progress-bar {
-  background: var(--color-track);
-  border-radius: var(--radius-pill);
+.week-text.muted {
+  color: var(--color-week-muted);
 }
 
-.progress::-webkit-progress-value {
-  background: var(--color-accent);
-  border-radius: var(--radius-pill);
+.week-card .score-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-week-muted);
 }
 
-.progress::-moz-progress-bar {
-  background: var(--color-accent);
-  border-radius: var(--radius-pill);
+.week-card .score-line span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* ---- Categoriekleuren (zie app/palette.py) ---- */
+.week-card .score-line .avatar {
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+/* ---- Categoriekleuren (zie app/palette.py) ----
+   --cat: volle kleur (symboolblokje, vinkcirkel), --cat-soft: vlak van de kaart. */
 
 .cat-blue {
-  background: #4c7dd8;
+  --cat: #3d6fe0;
+  --cat-soft: #e2eafb;
 }
 
 .cat-sky {
-  background: #3f8fb5;
+  --cat: #2a7fae;
+  --cat-soft: #dcf0f8;
 }
 
 .cat-teal {
-  background: #2e9c8f;
+  --cat: #11888c;
+  --cat-soft: #d6efef;
 }
 
 .cat-green {
-  background: #3e9b5f;
+  --cat: #2b8a52;
+  --cat-soft: #daf1e2;
 }
 
 .cat-olive {
-  background: #7d8b2e;
+  --cat: #6f7f1a;
+  --cat-soft: #eef1d2;
 }
 
 .cat-orange {
-  background: #b8771f;
+  --cat: #c96510;
+  --cat-soft: #fce8d4;
 }
 
 .cat-red {
-  background: #c8503c;
+  --cat: #d23f55;
+  --cat-soft: #fadde2;
 }
 
 .cat-pink {
-  background: #c2577f;
+  --cat: #c2447f;
+  --cat-soft: #f9e0ee;
 }
 
 .cat-purple {
-  background: #8a6bd1;
+  --cat: #7c59d4;
+  --cat-soft: #e9e1fa;
 }
 
 .cat-brown {
-  background: #8b6a4f;
+  --cat: #8a6446;
+  --cat-soft: #f1e6dc;
 }
 
 .cat-slate {
-  background: #5e6b7a;
+  --cat: #5a6878;
+  --cat-soft: #e5e9ee;
+}
+
+.dot,
+.swatch-dot {
+  background: var(--cat, var(--color-check-border));
+}
+
+/* Symbool in volle categoriekleur */
+.cat-tile {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: #ffffff;
+  background: var(--cat);
+  border-radius: var(--radius-tile);
+}
+
+.cat-tile svg {
+  width: 26px;
+  height: 26px;
+}
+
+.cat-tile-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+}
+
+.cat-tile-sm svg {
+  width: 22px;
+  height: 22px;
+}
+
+.cat-tile-xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+}
+
+.cat-tile-xs svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Mini-symbolen in de week- en maandweergave */
+.mini-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  min-height: 18px;
+}
+
+.mini-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #ffffff;
+  background: var(--cat);
+  border-radius: 6px;
+}
+
+.mini-tile svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.6;
+}
+
+/* Alleen een vervaldatum (nog niet ingepland): omlijnd */
+.mini-tile.is-due {
+  color: var(--cat);
+  background: var(--color-surface);
+  box-shadow: inset 0 0 0 1.5px var(--cat);
+}
+
+/* ---- Taakkaart: zacht vlak in de categoriekleur ---- */
+
+.list.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.list.cards > .list-item + .list-item,
+.list.cards li + li > .list-link {
+  border-top: 0;
+}
+
+.task-card {
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--cat-soft);
+  border-radius: var(--radius-card);
+}
+
+.list.cards li > .task-card:hover {
+  background: var(--cat-soft);
+  box-shadow: inset 0 0 0 2px var(--cat);
+}
+
+.task-card.compact {
+  padding: 10px var(--space-3);
+}
+
+.task-card .item-title {
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.task-card .item-meta {
+  font-size: var(--text-md);
+}
+
+.task-card .avatar-stack .avatar {
+  border-color: var(--cat-soft);
+}
+
+.task-card.is-late {
+  box-shadow: inset 0 0 0 2px var(--color-late);
+}
+
+.task-card.is-done {
+  background: rgb(255 255 255 / 70%);
+}
+
+.late-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 3px 9px 3px 7px;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  color: var(--color-late);
+  background: var(--color-surface);
+  border-radius: var(--radius-pill);
+}
+
+.late-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.points {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 800;
+  color: var(--color-gold-text);
+}
+
+.points svg {
+  width: 15px;
+  height: 15px;
+  fill: var(--color-gold);
+}
+
+/* ---- Symbool kiezen (categorie) ---- */
+
+.icon-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.icon-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--touch), 1fr));
+  gap: var(--space-2);
+}
+
+.icon-choice {
+  position: relative;
+  display: flex;
+  aspect-ratio: 1;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.icon-choice input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.icon-face {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+  background: var(--color-bg);
+  border-radius: 14px;
+}
+
+.icon-choice svg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-choice input:checked + .icon-face {
+  color: #ffffff;
+  background: var(--cat, var(--color-accent));
+}
+
+.icon-choice input:focus-visible + .icon-face {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.form:has(input[name="color"][value="blue"]:checked) {
+  --cat: #3d6fe0;
+}
+
+.form:has(input[name="color"][value="sky"]:checked) {
+  --cat: #2a7fae;
+}
+
+.form:has(input[name="color"][value="teal"]:checked) {
+  --cat: #11888c;
+}
+
+.form:has(input[name="color"][value="green"]:checked) {
+  --cat: #2b8a52;
+}
+
+.form:has(input[name="color"][value="olive"]:checked) {
+  --cat: #6f7f1a;
+}
+
+.form:has(input[name="color"][value="orange"]:checked) {
+  --cat: #c96510;
+}
+
+.form:has(input[name="color"][value="red"]:checked) {
+  --cat: #d23f55;
+}
+
+.form:has(input[name="color"][value="pink"]:checked) {
+  --cat: #c2447f;
+}
+
+.form:has(input[name="color"][value="purple"]:checked) {
+  --cat: #7c59d4;
+}
+
+.form:has(input[name="color"][value="brown"]:checked) {
+  --cat: #8a6446;
+}
+
+.form:has(input[name="color"][value="slate"]:checked) {
+  --cat: #5a6878;
 }
 
 /* ---- Kleurkeuze ---- */
@@ -1049,37 +1409,29 @@ a.chip {
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--touch);
+  height: var(--touch);
   padding: 0;
   color: var(--color-on-accent);
   background: var(--color-surface);
-  border: 2px solid var(--color-check-border);
+  border: 2.5px solid var(--cat, var(--color-check-border));
   border-radius: 50%;
   cursor: pointer;
 }
 
-/* Aanraakvlak 44px rond de cirkel van 28px */
-.check::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
-}
-
 button.check:hover {
-  border-color: var(--color-accent);
-  background: var(--color-accent-soft);
+  background: var(--cat-soft, var(--color-accent-soft));
 }
 
 .check-done {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--cat, var(--color-accent));
+  border-color: var(--cat, var(--color-accent));
   cursor: default;
 }
 
 .check svg {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
 }
 
 .item-link {
@@ -1120,7 +1472,7 @@ button.check:hover {
   margin: 0 auto;
   padding: var(--space-3) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
   overflow-y: auto;
-  background: var(--color-surface);
+  background: var(--color-bg);
   border-radius: 28px 28px 0 0;
 }
 
@@ -1138,17 +1490,17 @@ body.sheet-open {
 
 .sheet-close {
   position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
+  top: var(--space-5);
+  right: var(--space-4);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: var(--touch);
   height: var(--touch);
-  color: var(--color-text-muted);
-  background: transparent;
+  color: var(--color-text);
+  background: var(--color-surface);
   border: 0;
-  border-radius: 50%;
+  border-radius: 14px;
   cursor: pointer;
 }
 
@@ -1267,6 +1619,7 @@ body.sheet-open {
 .bottom-nav ul {
   display: flex;
   justify-content: space-around;
+  align-items: flex-start;
   max-width: var(--content-max);
   height: var(--nav-height);
   margin: 0 auto;
@@ -1279,17 +1632,20 @@ body.sheet-open {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  min-width: 56px;
+  min-width: 60px;
   min-height: 56px;
-  padding-top: var(--space-3);
-  font-size: var(--text-xs);
-  font-weight: 600;
+  margin-top: var(--space-2);
+  padding: 6px var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--color-nav);
   text-decoration: none;
+  border-radius: 16px;
 }
 
 .bottom-nav a[aria-current="page"] {
-  color: var(--color-accent);
+  color: var(--color-on-accent);
+  background: var(--color-accent);
 }
 
 .bottom-nav svg {
@@ -1317,6 +1673,34 @@ body.sheet-open {
 
 .item-meta > span {
   white-space: nowrap;
+}
+
+.item-meta svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.item-meta > .time {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: auto;
+  font-size: inherit;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.item-meta > .time-due {
+  font-size: inherit;
+  font-weight: 700;
+}
+
+.sheet-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-right: var(--touch);
 }
 
 /* ---- Planning ---- */
@@ -1361,46 +1745,67 @@ body.sheet-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  font-size: var(--text-lg);
-  font-weight: 600;
+  width: 34px;
+  height: 30px;
+  font-size: 1.0625rem;
+  font-weight: 800;
   border-radius: 50%;
 }
 
 .day-num.is-today {
-  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+  text-decoration: underline 3px var(--color-gold);
+  text-underline-offset: 4px;
 }
 
 .day[aria-current="date"] .day-num {
   color: var(--color-on-accent);
+}
+
+.weekstrip li + li {
+  margin-left: var(--space-1);
+}
+
+.weekstrip .day {
+  gap: 2px;
+  padding: 6px 0 8px;
+  background: var(--color-surface);
+}
+
+.weekstrip .day[aria-current="date"] {
   background: var(--color-accent);
 }
 
-.day-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+.weekstrip .day[aria-current="date"] .day-name,
+.weekstrip .day[aria-current="date"] .month-more {
+  color: var(--color-week-muted);
 }
 
-.day-dot.has-items {
-  background: var(--color-check-border);
+.weekstrip .mini-tiles {
+  flex-wrap: nowrap;
+  gap: 1px;
 }
 
-.day[aria-current="date"] .day-dot.has-items {
-  background: var(--color-accent);
+.weekstrip .mini-tile {
+  width: 15px;
+  height: 15px;
+  border-radius: 5px;
+}
+
+.weekstrip .mini-tile svg {
+  width: 10px;
+  height: 10px;
 }
 
 .period-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: -8px 0;
+  margin: -4px 0;
 }
 
 .period-label {
   margin: 0;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 /* Maandraster */
@@ -1418,7 +1823,7 @@ body.sheet-open {
 }
 
 .month-grid td {
-  padding: 1px;
+  padding: 1.5px;
   vertical-align: top;
 }
 
@@ -1449,22 +1854,42 @@ body.sheet-open {
   opacity: 0.55;
 }
 
-.month-day[aria-current="date"] .day-num {
+.month-day {
+  background: var(--color-surface);
+}
+
+.month-day.is-other {
+  background: transparent;
+}
+
+.month-day[aria-current="date"] {
   color: var(--color-on-accent);
   background: var(--color-accent);
 }
 
-.month-dots {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 8px;
+.month-day[aria-current="date"] .month-more {
+  color: var(--color-week-muted);
 }
 
-.month-dots .dot {
-  width: 6px;
-  height: 6px;
-  margin: 0;
+.month-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  min-height: 14px;
+}
+
+.month-dots .mini-tile {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+}
+
+.month-dots .mini-tile svg {
+  width: 10px;
+  height: 10px;
+  stroke-width: 2.8;
 }
 
 .month-more {
@@ -1478,11 +1903,6 @@ body.sheet-open {
   display: none;
 }
 
-/* Alleen een vervaldatum (nog niet ingepland): open stip / omlijnd label */
-.month-dots .dot-due {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--color-text-muted);
-}
 
 .time-due {
   font-size: 0.75rem;
@@ -1537,17 +1957,18 @@ body.sheet-open {
   }
 
   .month-name.is-due {
-    background: transparent;
-    box-shadow: inset 0 0 0 1px var(--color-border);
+    background: var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--cat, var(--color-border));
   }
 
   .month-name {
     overflow: hidden;
     padding: 1px 4px;
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     white-space: nowrap;
     text-overflow: ellipsis;
-    background: var(--color-accent-soft);
+    color: var(--color-text);
+    background: var(--cat-soft, var(--color-accent-soft));
     border-radius: 4px;
   }
 }
@@ -1557,9 +1978,11 @@ body.sheet-open {
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  width: var(--touch);
   height: var(--touch);
-  color: var(--color-text-muted);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-radius: 14px;
 }
 
 .week-arrow svg {
@@ -1688,7 +2111,8 @@ li + li > .list-button {
 }
 
 .points-plus {
-  color: var(--color-accent);
+  font-weight: 800;
+  color: var(--color-success);
 }
 
 .points-edit {
@@ -1713,10 +2137,10 @@ li + li > .list-button {
 
 .segmented {
   display: flex;
-  gap: 2px;
-  padding: 3px;
+  gap: 4px;
+  padding: 4px;
   background: var(--color-track);
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .segment {
@@ -1726,38 +2150,56 @@ li + li > .list-button {
   justify-content: center;
   min-height: var(--touch);
   font-size: var(--text-md);
-  font-weight: 600;
-  color: var(--color-text);
+  font-weight: 700;
+  color: var(--color-text-muted);
   text-decoration: none;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .segment[aria-current="true"] {
+  color: var(--color-text);
   background: var(--color-surface);
-  box-shadow: 0 1px 2px rgb(26 29 26 / 8%);
+  box-shadow: 0 1px 3px rgb(42 33 64 / 10%);
 }
 
 .score-board {
   display: flex;
+  gap: 10px;
+  overflow: visible;
+  background: transparent;
+  border: 0;
 }
 
 .score {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  background: var(--color-surface);
+  border-radius: 22px;
 }
 
-.score + .score {
-  border-left: 1px solid var(--color-divider);
+.score.is-leader {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+}
+
+.score-crown {
+  position: absolute;
+  top: -14px;
+  width: 30px;
+  height: 30px;
+  color: var(--color-gold-text);
+  fill: var(--color-gold);
 }
 
 .avatar-lg {
-  width: 44px;
-  height: 44px;
-  font-size: 17px;
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
 }
 
 .score-name {
@@ -1766,19 +2208,24 @@ li + li > .list-button {
 }
 
 .score-points {
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 900;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .score-label {
-  font-size: 0.75rem;
+  padding: 3px 10px;
+  font-size: var(--text-sm);
+  font-weight: 800;
   color: var(--color-text-muted);
+  background: var(--color-track);
+  border-radius: var(--radius-pill);
 }
 
 .score-label.leader {
-  font-weight: 700;
-  color: var(--color-accent);
+  color: var(--color-on-gold);
+  background: var(--color-gold);
 }
 
 .score-line {

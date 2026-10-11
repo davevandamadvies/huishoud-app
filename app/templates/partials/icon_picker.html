@@ -1,0 +1,12 @@
+<fieldset class="field icon-picker">
+  <legend class="label">Symbool</legend>
+  <div class="icon-choices">
+    {% for key, label in icons.items() %}
+    <label class="icon-choice">
+      <input type="radio" name="icon" value="{{ key }}"{% if form.icon == key %} checked{% endif %}>
+      <span class="icon-face"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{% include "icons/cat/" ~ key ~ ".svg" %}</svg></span>
+      <span class="visually-hidden">{{ label }}</span>
+    </label>
+    {% endfor %}
+  </div>
+</fieldset>

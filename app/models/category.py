@@ -13,5 +13,7 @@ class Category(Base):
     name: Mapped[str] = mapped_column(String(40), unique=True)
     # Sleutel uit app.palette.CATEGORY_COLORS
     color: Mapped[str] = mapped_column(String(20))
+    # Sleutel uit app.palette.CATEGORY_ICONS
+    icon: Mapped[str] = mapped_column(String(20), default="tag", server_default="tag")
     position: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

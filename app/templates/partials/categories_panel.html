@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile %}
 <div id="categories-panel" class="stack">
   {% include "partials/messages.html" %}
   {% if categories %}
@@ -5,7 +6,7 @@
     {% for c in categories %}
     <li>
       <a class="list-item list-link" href="/categorieen/{{ c.id }}">
-        <span class="dot cat-{{ c.color }}" aria-hidden="true"></span>
+        {{ cat_tile(c, "sm") }}
         <span class="item-title">{{ c.name }}</span>
         <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>
       </a>
@@ -24,6 +25,7 @@
         <input class="input" id="name" name="name" required maxlength="40" value="{{ form.name or '' }}">
       </div>
       {% include "partials/color_picker.html" %}
+      {% include "partials/icon_picker.html" %}
       <button class="button" type="submit">Toevoegen</button>
     </form>
   </section>

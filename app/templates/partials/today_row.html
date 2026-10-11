@@ -1,10 +1,11 @@
+{% from "partials/category.html" import cat_tile, ui_icon %}
 {% set task = occ.task %}
-<li class="list-item task-row">
-  <button class="check" type="button" hx-get="/taken/{{ task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML" aria-label="{{ task.name }} afvinken"></button>
+{% set late_label, late_tone = due_label(occ.effective_date, today) if kind == "late" else ("", "") %}
+<li class="list-item task-row task-card cat-{{ task.category.color }}{% if kind == 'late' %} is-late{% endif %}">
+  {{ cat_tile(task.category) }}
   <a class="item-body item-link" href="/taken/{{ task.id }}">
     <div class="item-title">{{ task.name }}</div>
     <div class="item-meta">
-      <span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>
       <span>{{ task.category.name }}</span>
       {% set who = responsible(occ) %}
       {% if who|length > 1 %}
@@ -17,12 +18,14 @@
       {% if occ.planned_date and kind != "late" %}
       <span>· {{ plan_label(occ.planned_date, occ.planned_time, today) }}</span>
       {% if occ.days_after_due %}<span class="late">· na vervaldatum</span>{% endif %}
-      {% elif kind != "today" %}
+      {% elif kind == "soon" %}
       {% set label, tone = due_label(occ.effective_date, today) %}
       <span class="due-{{ tone }}">· {{ label }}</span>
       {% endif %}
+      {% set pts = occ.points if occ.points is not none else task.default_points %}
+      {% if request.state.competition and pts %}<span class="points">· {{ ui_icon("star") }}{{ pts }} p</span>{% endif %}
     </div>
+    {% if kind == "late" %}<span class="late-badge">{{ ui_icon("alarm") }}{{ late_label }}</span>{% endif %}
   </a>
-  {% set pts = occ.points if occ.points is not none else task.default_points %}
-  {% if request.state.competition and pts %}<span class="item-end">{{ pts }} p</span>{% endif %}
+  <button class="check" type="button" hx-get="/taken/{{ task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML" aria-label="{{ task.name }} afvinken"></button>
 </li>

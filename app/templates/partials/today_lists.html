@@ -1,20 +1,24 @@
+{% from "partials/category.html" import cat_tile, ui_icon %}
 <div id="today-lists" class="stack" hx-get="/vandaag/lijsten" hx-trigger="occurrences-changed from:body" hx-swap="outerHTML" hx-disinherit="*">
-  <section class="week" aria-label="Deze week">
-    <div class="week-summary">
-      {% if view.week_total %}
-      <div><strong>{{ view.week_done }} van {{ view.week_total }}</strong> gedaan deze week</div>
-      {% else %}
-      <div class="muted">Nog niets gepland deze week</div>
-      {% endif %}
-      {% if week_standings %}
-      <a class="muted score-line" href="/scores">{% for s in week_standings %}{{ s.user.display_name }} {{ s.points }}{% if not loop.last %} · {% endif %}{% endfor %}</a>
-      {% endif %}
+  <section class="week-card" aria-label="Deze week">
+    {% set pct = ((view.week_done / view.week_total) * 100)|round(1) if view.week_total else 0 %}
+    <div class="week-ring" aria-hidden="true">
+      <svg viewBox="0 0 36 36" focusable="false"><circle class="ring-track" cx="18" cy="18" r="15.9155"/>{% if view.week_done %}<circle class="ring-fill" cx="18" cy="18" r="15.9155" stroke-dasharray="{{ pct }} 100"/>{% endif %}</svg>
+      <span class="ring-label">{{ view.week_done }}/{{ view.week_total }}</span>
     </div>
-    <progress class="progress" max="{{ view.week_total or 1 }}" value="{{ view.week_done }}" aria-label="Voortgang deze week">{{ view.week_done }} van {{ view.week_total }}</progress>
+    {% if view.week_total %}
+    <p class="week-text"><strong>{{ view.week_done }} van {{ view.week_total }}</strong>gedaan deze week</p>
+    {% else %}
+    <p class="week-text muted">Nog niets gepland deze week</p>
+    {% endif %}
+    {% if week_standings %}
+    <a class="score-line" href="/scores">{% for s in week_standings %}<span><span class="avatar avatar-{{ s.user.avatar_color }}" aria-hidden="true">{{ s.user.initial }}</span>{{ s.user.display_name }} {{ s.points }}</span>{% endfor %}</a>
+    {% endif %}
   </section>
 
   {% if view.is_empty %}
   <div class="empty-state">
+    <span class="empty-sun">{{ ui_icon("sun") }}</span>
     <strong>Niks te doen</strong>
     Lekker rustig. Taken met een datum verschijnen hier vanzelf.
   </div>
@@ -22,8 +26,8 @@
 
   {% if view.late %}
   <section aria-labelledby="late-title">
-    <h2 class="section-title late" id="late-title">Te laat</h2>
-    <ul class="list">
+    <h2 class="section-title late" id="late-title">{{ ui_icon("alarm") }}Te laat</h2>
+    <ul class="list cards">
       {% for occ in view.late %}{% with kind="late" %}{% include "partials/today_row.html" %}{% endwith %}{% endfor %}
     </ul>
   </section>
@@ -31,30 +35,30 @@
 
   {% if view.today or view.done_today %}
   <section aria-labelledby="today-title">
-    <h2 class="section-title" id="today-title">Vandaag</h2>
-    <ul class="list">
+    <h2 class="section-title" id="today-title">{{ ui_icon("sun") }}Vandaag</h2>
+    <ul class="list cards">
       {% for occ in view.today %}{% with kind="today" %}{% include "partials/today_row.html" %}{% endwith %}{% endfor %}
       {% for occ in view.done_today %}
-      <li class="list-item task-row is-done">
-        <span class="check check-done" role="img" aria-label="Gedaan">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-        </span>
+      <li class="list-item task-row task-card is-done cat-{{ occ.task.category.color }}">
+        {{ cat_tile(occ.task.category) }}
         <a class="item-body item-link" href="/taken/{{ occ.task.id }}">
           <div class="item-title">{{ occ.task.name }}</div>
           <div class="item-meta">
-            <span class="dot cat-{{ occ.task.category.color }}" aria-hidden="true"></span>
             <span>{{ occ.task.category.name }}</span>
-            <span>· {{ "samen" if occ.performers|length > 1 else occ.performers[0].user.display_name if occ.performers else "" }}</span>
+            <span>· {{ "samen" if occ.performers|length > 1 else "gedaan door " ~ occ.performers[0].user.display_name if occ.performers else "gedaan" }}</span>
             {% if occ.performers|length > 1 %}
             <span class="avatar-stack avatar-stack-sm">
               {% for p in occ.performers %}<span class="avatar avatar-{{ p.user.avatar_color }}" aria-hidden="true">{{ p.user.initial }}</span>{% endfor %}
             </span>
             {% endif %}
+            {% if request.state.competition and occ.performers and occ.performers[0].points %}
+            <span class="points-plus">· +{{ occ.performers[0].points }}{{ " p.p." if occ.performers|length > 1 else " p" }}</span>
+            {% endif %}
           </div>
         </a>
-        {% if request.state.competition and occ.performers and occ.performers[0].points %}
-        <span class="item-end points-plus">+{{ occ.performers[0].points }}{{ " p.p." if occ.performers|length > 1 else " p" }}</span>
-        {% endif %}
+        <span class="check check-done" role="img" aria-label="Gedaan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
       </li>
       {% endfor %}
     </ul>
@@ -63,8 +67,8 @@
 
   {% if view.soon %}
   <section aria-labelledby="soon-title">
-    <h2 class="section-title" id="soon-title">Binnenkort</h2>
-    <ul class="list">
+    <h2 class="section-title" id="soon-title">{{ ui_icon("soon") }}Binnenkort</h2>
+    <ul class="list cards">
       {% for occ in view.soon %}{% with kind="soon" %}{% include "partials/today_row.html" %}{% endwith %}{% endfor %}
     </ul>
   </section>

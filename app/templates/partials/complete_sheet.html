@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile %}
 <div class="sheet-backdrop" data-close-sheet></div>
 <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
   <div class="sheet-handle" aria-hidden="true"></div>
@@ -5,8 +6,13 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
   <div>
-    <p class="item-meta"><span class="dot cat-{{ task.category.color }}" aria-hidden="true"></span>{{ task.category.name }} · {{ task.recurrence_text|lower }}</p>
-    <h2 class="sheet-title" id="sheet-title" tabindex="-1">{{ task.name }}</h2>
+    <div class="sheet-heading">
+      {{ cat_tile(task.category) }}
+      <div>
+        <p class="item-meta">{{ task.category.name }} · {{ task.recurrence_text|lower }}</p>
+        <h2 class="sheet-title" id="sheet-title" tabindex="-1">{{ task.name }}</h2>
+      </div>
+    </div>
   </div>
 
   <form class="sheet-form" hx-post="/taken/{{ task.id }}/afronden" hx-target="#sheet" hx-swap="innerHTML">

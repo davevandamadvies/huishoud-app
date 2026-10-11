@@ -45,7 +45,13 @@ def contrast(fg: str, bg: str) -> float:
         ("avatar-6-fg", "avatar-6-bg"),
         ("color-error", "color-error-soft"),
         ("color-error", "color-surface"),
-        ("color-accent", "color-success-soft"),
+        ("color-success", "color-success-soft"),
+        ("color-success", "color-surface"),
+        ("color-gold-text", "color-surface"),
+        ("color-on-gold", "color-gold"),
+        ("color-gold", "color-accent"),
+        ("color-week-muted", "color-accent"),
+        ("color-on-accent", "color-accent"),
     ],
 )
 def test_text_contrast(fg: str, bg: str) -> None:
@@ -57,9 +63,27 @@ def test_check_border_contrast() -> None:
 
 
 def test_category_palette_has_css_and_contrast() -> None:
-    from app.palette import CATEGORY_COLORS
+    from app.palette import CATEGORY_COLORS, CATEGORY_SOFT
 
     for key, (_label, hex_color) in CATEGORY_COLORS.items():
-        assert f".cat-{key} {{\n  background: {hex_color};" in CSS, key
-        # Niet-tekstelement (bolletje): minimaal 3:1 op wit
+        soft = CATEGORY_SOFT[key]
+        assert f".cat-{key} {{\n  --cat: {hex_color};\n  --cat-soft: {soft};" in CSS
+        # Symbool en vinkcirkel (niet-tekst): minimaal 3:1 op wit en op het vlak
         assert contrast(hex_color, TOKENS["color-surface"]) >= 3, key
+        assert contrast(hex_color, soft) >= 3, key
+        # Tekst op de taakkaart: minimaal 4.5:1
+        for token in (
+            "color-text",
+            "color-text-muted",
+            "color-late",
+            "color-gold-text",
+        ):
+            assert contrast(TOKENS[token], soft) >= 4.5, (key, token)
+
+
+def test_category_icons_exist() -> None:
+    from app.palette import CATEGORY_ICONS, DEFAULT_ICON
+
+    icons = Path(__file__).resolve().parent.parent / "app/templates/icons/cat"
+    assert DEFAULT_ICON in CATEGORY_ICONS
+    assert {p.stem for p in icons.glob("*.svg")} == set(CATEGORY_ICONS)

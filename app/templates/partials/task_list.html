@@ -1,18 +1,19 @@
+{% from "partials/category.html" import cat_tile %}
 <div id="task-list">
   {% if rows %}
-  <ul class="list">
+  <ul class="list cards">
     {% for row in rows %}
     {% set label, tone = due_label(row.next_date, today) %}
     <li>
-      <a class="list-item list-link" href="/taken/{{ row.task.id }}">
-        <span class="dot cat-{{ row.task.category.color }}" aria-hidden="true"></span>
+      <a class="list-item list-link task-card compact cat-{{ row.task.category.color }}{% if tone == 'late' %} is-late{% endif %}" href="/taken/{{ row.task.id }}">
+        {{ cat_tile(row.task.category, "sm") }}
         <div class="item-body">
           <div class="item-title">{{ row.task.name }}</div>
           <div class="item-meta">
             <span>{{ row.task.recurrence_text }}</span>
             {% if row.task.owner %}<span>· {{ row.task.owner.display_name }}</span>{% endif %}
             {% if row.pending %}{% set km = km_left_label(row.pending) %}{% if km %}<span>· {{ km }}</span>{% endif %}{% endif %}
-            <span class="visually-hidden">· {{ row.task.category.name }}</span>
+            <span>· {{ row.task.category.name }}</span>
           </div>
         </div>
         <span class="item-end due-{{ tone }}">{{ label }}</span>
