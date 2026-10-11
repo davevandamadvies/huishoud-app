@@ -1,4 +1,4 @@
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 
 import httpx
 import pytest
@@ -452,10 +452,11 @@ def test_backlog_cleared_compliment(db: Session, user: User) -> None:
 
 
 def _age_history(db: Session, days: int) -> None:
-    from app.db import utcnow
-
+    # Ten opzichte van de vaste TODAY, niet van de echte klok: anders krimpt
+    # de geschiedenis elke dag dat de test later draait.
+    start = datetime.combine(TODAY - timedelta(days=days), time(12), tzinfo=UTC)
     for occurrence in db.scalars(select(Occurrence)):
-        occurrence.created_at = utcnow() - timedelta(days=days)
+        occurrence.created_at = start
     db.commit()
 
 
