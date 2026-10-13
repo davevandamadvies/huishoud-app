@@ -39,6 +39,7 @@ class Row:
     label: str
     value: int
     color: str | None = None
+    icon: str | None = None
     detail: str | None = None
 
 
@@ -173,7 +174,12 @@ def build(db: Session, selected: Range, today: date) -> Stats:
         )[:TOP]
     ]
     stats.per_category = [
-        Row(categories[cid].name, count, categories[cid].color)
+        Row(
+            categories[cid].name,
+            count,
+            categories[cid].color,
+            icon=categories[cid].icon,
+        )
         for cid, count in sorted(
             per_cat.items(), key=lambda i: (-i[1], categories[i[0]].name)
         )
@@ -194,7 +200,12 @@ def build(db: Session, selected: Range, today: date) -> Stats:
     if stats.cost_total:
         stats.cost_per_period = _buckets(start, end, cost_month)
         stats.cost_per_category = [
-            Row(categories[cid].name, cents, categories[cid].color)
+            Row(
+                categories[cid].name,
+                cents,
+                categories[cid].color,
+                icon=categories[cid].icon,
+            )
             for cid, cents in cost_cat.most_common()
         ]
         stats.cost_top = [

@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile %}
 {% macro invalid(field) %}{% if errors.get(field) %} aria-invalid="true" aria-describedby="{{ field }}-error"{% endif %}{% endmacro %}
 <div id="reminder-form" class="stack">
   {% include "partials/messages.html" %}
@@ -99,7 +100,7 @@
         {% for c in categories %}
         <label class="option">
           <input type="checkbox" name="category" value="{{ c.id }}"{% if c.id not in v.muted %} checked{% endif %}>
-          <span class="dot cat-{{ c.color }}" aria-hidden="true"></span>
+          {{ cat_tile(c, "xs") }}
           <span>{{ c.name }}</span>
         </label>
         {% endfor %}

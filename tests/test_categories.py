@@ -45,7 +45,7 @@ def test_update_keeps_own_name(db: Session, user: User) -> None:
     categories.update(db, user, category, name="Tuin", color="olive")
     assert category.color == "olive"
     entry = db.scalars(select(AuditLog)).one()
-    assert entry.old_value == {"name": "Tuin", "color": "green"}
+    assert entry.old_value == {"name": "Tuin", "color": "green", "icon": "tag"}
 
 
 def test_delete_blocked_when_tasks_exist(
@@ -64,7 +64,8 @@ def test_pages(client: TestClient, db: Session) -> None:
     make_category(db, "Planten", "teal")
     html = client.get("/categorieen").text
     assert "Planten" in html
-    assert 'class="dot cat-teal"' in html
+    assert 'class="cat-tile cat-tile-sm cat-teal"' in html
+    assert 'name="icon" value="sparkle"' in html
     assert ">1<" in client.get("/meer").text.replace(" ", "")
 
 
@@ -104,3 +105,23 @@ def test_edit_and_delete_via_form(client: TestClient, db: Session) -> None:
 
 def test_requires_login(anon_client: TestClient) -> None:
     assert anon_client.get("/categorieen").status_code == 303
+
+
+def test_icon_is_validated_and_kept(db: Session, user: User) -> None:
+    with pytest.raises(categories.CategoryError, match="symbool"):
+        categories.create(db, user, name="Iets", color="blue", icon="raket")
+    category = categories.create(db, user, name="Was", color="sky", icon="shirt")
+    assert category.icon == "shirt"
+    categories.update(db, user, category, name="Wasgoed", color="sky")
+    assert category.icon == "shirt"
+
+
+def test_create_with_icon_via_form(client: TestClient, db: Session) -> None:
+    client.post(
+        "/categorieen",
+        data={"name": "Huisdieren", "color": "brown", "icon": "paw"},
+        headers=HTMX_HEADERS,
+    )
+    assert db.scalar(select(Category.icon)) == "paw"
+    html = client.get("/categorieen").text
+    assert "icons/cat" not in html  # symbool staat inline, geen los bestand

@@ -1,0 +1,17 @@
+{# Symbool van een categorie in volle kleur. Decoratief: de categorienaam staat er altijd in tekst bij. #}
+{% macro cat_svg(category) -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{% include ["icons/cat/" ~ category.icon ~ ".svg", "icons/cat/tag.svg"] %}</svg>
+{%- endmacro %}
+
+{% macro cat_tile(category, size="") -%}
+<span class="cat-tile{% if size %} cat-tile-{{ size }}{% endif %} cat-{{ category.color }}" aria-hidden="true">{{ cat_svg(category) }}</span>
+{%- endmacro %}
+
+{# Mini-symbool in de week- en maandweergave; omlijnd als het alleen een vervaldatum is #}
+{% macro mini_tile(occ) -%}
+<span class="mini-tile cat-{{ occ.task.category.color }}{% if occ.status.value == 'open' %} is-due{% endif %}">{{ cat_svg(occ.task.category) }}</span>
+{%- endmacro %}
+
+{% macro ui_icon(name) -%}
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{% include "icons/ui/" ~ name ~ ".svg" %}</svg>
+{%- endmacro %}

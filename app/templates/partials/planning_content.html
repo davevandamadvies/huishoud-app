@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile, mini_tile, ui_icon %}
 {% macro nav(day, mode) -%}
 href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get="/planning/inhoud?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-target="#planning-content" hx-swap="outerHTML" hx-push-url="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}"
 {%- endmacro %}
@@ -43,11 +44,11 @@ href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get=
              {% if d.date == view.day %}aria-current="date"{% endif %} aria-label="{{ day_label(d) }}">
             <span class="day-num{% if d.date == today %} is-today{% endif %}" aria-hidden="true">{{ d.date.day }}</span>
             <span class="month-dots" aria-hidden="true">
-              {% for occ in d.dots %}<span class="dot cat-{{ occ.task.category.color }}{% if occ.status.value == 'open' %} dot-due{% endif %}"></span>{% endfor %}
+              {% for occ in d.dots %}{{ mini_tile(occ) }}{% endfor %}
               {% if d.more %}<span class="month-more">+{{ d.more }}</span>{% endif %}
             </span>
             <span class="month-names" aria-hidden="true">
-              {% for occ in d.items[:3] %}<span class="month-name{% if occ.status.value == 'open' %} is-due{% endif %}">{{ occ.task.name }}</span>{% endfor %}
+              {% for occ in d.items[:3] %}<span class="month-name cat-{{ occ.task.category.color }}{% if occ.status.value == 'open' %} is-due{% endif %}">{{ occ.task.name }}</span>{% endfor %}
               {% if d.items|length > 3 %}<span class="month-more">+{{ d.items|length - 3 }}</span>{% endif %}
             </span>
           </a>
@@ -67,7 +68,7 @@ href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get=
            aria-label="{{ day_label(d) }}">
           <span class="day-name" aria-hidden="true">{{ short_weekday(d.date) }}</span>
           <span class="day-num{% if d.date == today %} is-today{% endif %}" aria-hidden="true">{{ d.date.day }}</span>
-          <span class="day-dot{% if d.has_items %} has-items{% endif %}" aria-hidden="true"></span>
+          <span class="mini-tiles" aria-hidden="true">{% for occ in d.dots %}{{ mini_tile(occ) }}{% endfor %}{% if d.more %}<span class="month-more">+{{ d.more }}</span>{% endif %}</span>
         </a>
       </li>
       {% endfor %}
@@ -76,29 +77,30 @@ href="/planning?weergave={{ mode.value }}&amp;dag={{ day.isoformat() }}" hx-get=
   {% endif %}
 
   <section aria-labelledby="day-title">
-    <h2 class="section-title" id="day-title">{{ dutch_date(view.day)|capitalize }}</h2>
+    <h2 class="section-title" id="day-title">{{ ui_icon("sun") if view.day == today }}{{ dutch_date(view.day)|capitalize }}</h2>
     {% if view.items %}
-    <ul class="list">
+    <ul class="list cards">
       {% for occ in view.items %}
       {% set who = responsible(occ) %}
       {% set is_due = occ.status.value == "open" %}
-      <li class="list-item task-row{% if is_due %} is-due{% endif %}">
-        {% if is_due %}
-        <span class="time time-due{% if occ.due_date < today %} late{% endif %}">vervalt</span>
-        {% else %}
-        <span class="time">{{ occ.planned_time.strftime('%H:%M') if occ.planned_time else "—" }}</span>
-        {% endif %}
+      <li class="list-item task-row task-card cat-{{ occ.task.category.color }}{% if is_due %} is-due{% endif %}{% if is_due and occ.due_date < today %} is-late{% endif %}">
+        {{ cat_tile(occ.task.category) }}
         <a class="item-body item-link" href="/taken/{{ occ.task.id }}">
           <div class="item-title">{{ occ.task.name }}</div>
           <div class="item-meta">
-            <span class="dot cat-{{ occ.task.category.color }}" aria-hidden="true"></span>
+            {% if is_due %}
+            <span class="time-due">vervalt</span>
+            {% elif occ.planned_time %}
+            <span class="time">{{ ui_icon("clock") }}{{ occ.planned_time.strftime('%H:%M') }}</span>
+            {% endif %}
+            <span>{{ occ.task.category.name }}</span>
             {% if who|length > 1 %}
-            <span>Samen</span>
+            <span>· samen</span>
             <span class="avatar-stack avatar-stack-sm">{% for u in who %}<span class="avatar avatar-{{ u.avatar_color }}" aria-hidden="true">{{ u.initial }}</span>{% endfor %}</span>
             {% elif who %}
-            <span>{{ who[0].display_name }}</span>
+            <span>· {{ who[0].display_name }}</span>
             {% else %}
-            <span>{{ "Nog niet ingepland" if is_due else "Nog niemand" }}</span>
+            <span>· {{ "nog niet ingepland" if is_due else "nog niemand" }}</span>
             {% endif %}
             {% if is_due and occ.due_date < today %}<span class="late">· te laat</span>{% endif %}
             {% if occ.days_after_due %}<span class="late">· na vervaldatum ({{ short_date(occ.due_date) }})</span>{% endif %}

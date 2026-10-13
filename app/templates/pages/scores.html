@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile %}
 {% extends "base.html" %}
 {% block content %}
 <header class="page-header-row">
@@ -19,7 +20,8 @@
 
 <section class="list score-board" aria-label="Stand">
   {% for s in board.standings %}
-  <div class="score">
+  <div class="score{% if board.leader and board.leader.user.id == s.user.id %} is-leader{% endif %}">
+    {% if board.leader and board.leader.user.id == s.user.id %}<svg class="score-crown" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true" focusable="false">{% include "icons/ui/crown.svg" %}</svg>{% endif %}
     <span class="avatar avatar-lg avatar-{{ s.user.avatar_color }}" aria-hidden="true">{{ s.user.initial }}</span>
     <div class="score-name">{{ s.user.display_name }}</div>
     <div class="score-points">{{ s.points }}</div>
@@ -39,7 +41,7 @@
 <nav class="chips" aria-label="Filter op categorie">
   <a class="chip" href="/scores?periode={{ period.value }}"{% if not selected_category %} aria-current="true"{% endif %}>Alles</a>
   {% for c in categories %}
-  <a class="chip" href="/scores?periode={{ period.value }}&categorie={{ c.id }}"{% if selected_category == c.id %} aria-current="true"{% endif %}><span class="dot cat-{{ c.color }}" aria-hidden="true"></span>{{ c.name }}</a>
+  <a class="chip" href="/scores?periode={{ period.value }}&categorie={{ c.id }}"{% if selected_category == c.id %} aria-current="true"{% endif %}>{{ cat_tile(c, "xs") }}{{ c.name }}</a>
   {% endfor %}
 </nav>
 

@@ -137,4 +137,4 @@ def test_today_competition_line(client: TestClient, db: Session, user: User) -> 
     settings_store.set_value(db, user, settings_store.COMPETITION, "true")
     done(db, user, [user], 8, today(), name="Badkamer")
     html = client.get("/").text
-    assert "Dave 8 · Partner 0" in html
+    assert "Dave 8</span>" in html and "Partner 0</span>" in html

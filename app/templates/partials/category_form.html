@@ -6,6 +6,7 @@
       <input class="input" id="name" name="name" required maxlength="40" value="{{ form.name or '' }}">
     </div>
     {% include "partials/color_picker.html" %}
+    {% include "partials/icon_picker.html" %}
     <button class="button" type="submit">Opslaan</button>
   </form>
   <button class="button button-danger" type="button" hx-post="/categorieen/{{ category.id }}/verwijderen" hx-target="#category-form" hx-swap="outerHTML" hx-confirm="Categorie {{ category.name }} verwijderen?">Verwijderen</button>

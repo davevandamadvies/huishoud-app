@@ -11,7 +11,7 @@ from app.auth import CurrentUser, current_user
 from app.db import get_db
 from app.forms import Form
 from app.models import Category, User
-from app.palette import CATEGORY_COLORS, DEFAULT_COLOR
+from app.palette import CATEGORY_COLORS, CATEGORY_ICONS, DEFAULT_COLOR, DEFAULT_ICON
 from app.templating import templates
 
 router = APIRouter(
@@ -35,6 +35,7 @@ def _render(
             "active_nav": "more",
             "page_title": "Categorieën",
             "colors": CATEGORY_COLORS,
+            "icons": CATEGORY_ICONS,
             **context,
         },
     )
@@ -43,7 +44,7 @@ def _render(
 def _panel(
     request: Request, user: User, db: Session, **context: object
 ) -> HTMLResponse:
-    context.setdefault("form", {"color": DEFAULT_COLOR})
+    context.setdefault("form", {"color": DEFAULT_COLOR, "icon": DEFAULT_ICON})
     return _render(
         request,
         "partials/categories_panel.html",
@@ -67,13 +68,17 @@ def list_page(request: Request, user: CurrentUser, db: DB) -> HTMLResponse:
         "pages/categories.html",
         user,
         categories=categories.list_categories(db),
-        form={"color": DEFAULT_COLOR},
+        form={"color": DEFAULT_COLOR, "icon": DEFAULT_ICON},
     )
 
 
 @router.post("")
 def create(request: Request, user: CurrentUser, db: DB, form: Form) -> HTMLResponse:
-    values = {"name": form.get_str("name"), "color": form.get_str("color")}
+    values = {
+        "name": form.get_str("name"),
+        "color": form.get_str("color"),
+        "icon": form.get_str("icon") or DEFAULT_ICON,
+    }
     try:
         category = categories.create(db, user, **values)
     except categories.CategoryError as exc:
@@ -92,7 +97,7 @@ def edit_page(
         "pages/category_edit.html",
         user,
         category=category,
-        form={"name": category.name, "color": category.color},
+        form={"name": category.name, "color": category.color, "icon": category.icon},
         page_title=category.name,
     )
 
@@ -102,7 +107,11 @@ def update(
     request: Request, category_id: int, user: CurrentUser, db: DB, form: Form
 ) -> Response:
     category = _get(db, category_id)
-    values = {"name": form.get_str("name"), "color": form.get_str("color")}
+    values = {
+        "name": form.get_str("name"),
+        "color": form.get_str("color"),
+        "icon": form.get_str("icon") or DEFAULT_ICON,
+    }
     try:
         categories.update(db, user, category, **values)
     except categories.CategoryError as exc:
@@ -130,7 +139,11 @@ def delete(request: Request, category_id: int, user: CurrentUser, db: DB) -> Res
             "partials/category_form.html",
             user,
             category=category,
-            form={"name": category.name, "color": category.color},
+            form={
+                "name": category.name,
+                "color": category.color,
+                "icon": category.icon,
+            },
             error=str(exc),
         )
     return Response(status_code=204, headers={"HX-Redirect": "/categorieen"})

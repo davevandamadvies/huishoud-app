@@ -18,7 +18,7 @@ class Mode(StrEnum):
     WEEK = "week"
 
 
-MAX_DOTS = 3
+MAX_DOTS = 2
 
 
 @dataclass

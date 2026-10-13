@@ -7,8 +7,8 @@ from app.templating import STATIC_DIR, templates
 
 router = APIRouter(include_in_schema=False)
 
-THEME_COLOR = "#1f7a55"
-BACKGROUND_COLOR = "#fafaf8"
+THEME_COLOR = "#2a2140"
+BACKGROUND_COLOR = "#faf1e7"
 
 MANIFEST = {
     "id": "/",

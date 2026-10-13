@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile %}
 {% extends "base.html" %}
 {% block content %}
 <header>
@@ -21,7 +22,7 @@
   <a class="chip" href="{{ base }}"{% if not selected_category %} aria-current="true"{% endif %}>Alles</a>
   {% for c in categories %}
   <a class="chip" href="{{ base }}categorie={{ c.id }}"{% if selected_category == c.id %} aria-current="true"{% endif %}>
-    <span class="dot cat-{{ c.color }}" aria-hidden="true"></span>{{ c.name }}
+    {{ cat_tile(c, "xs") }}{{ c.name }}
   </a>
   {% endfor %}
 </nav>

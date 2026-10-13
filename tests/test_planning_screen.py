@@ -81,8 +81,8 @@ def test_planning_page(client: TestClient, db: Session, user: User) -> None:
     )
     plan(db, user, make_task(db, name="Bladeren ruimen"), day)
     html = client.get("/planning", params={"dag": day.isoformat()}).text
-    assert "Dakgoten" in html and "10:00" in html and "Samen" in html
-    assert "Bladeren ruimen" in html and "Nog niemand" in html
+    assert "Dakgoten" in html and "10:00" in html and "· samen" in html
+    assert "Bladeren ruimen" in html and "nog niemand" in html
     assert 'aria-current="date"' in html
     assert "iets gepland" in html
     assert 'hx-trigger="occurrences-changed from:body"' in html
@@ -155,7 +155,7 @@ def test_month_items_and_dots(db: Session, user: User) -> None:
     view = planning_view.build(db, day)
     cell = next(d for d in view.days if d.date == day)
     assert len(cell.items) == 5
-    assert len(cell.dots) == 3 and cell.more == 2
+    assert len(cell.dots) == 2 and cell.more == 3
     assert len(view.items) == 5
 
 

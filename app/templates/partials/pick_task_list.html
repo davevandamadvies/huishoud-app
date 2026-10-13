@@ -1,3 +1,4 @@
+{% from "partials/category.html" import cat_tile %}
 <div id="pick-list">
   {% if tasks %}
   <ul class="list pick-list">
@@ -5,7 +6,7 @@
     <li>
       <button class="list-item list-button" type="button"
               hx-get="/taken/{{ t.id }}/inplannen?datum={{ day.isoformat() }}&na=event" hx-target="#sheet" hx-swap="innerHTML">
-        <span class="dot cat-{{ t.category.color }}" aria-hidden="true"></span>
+        {{ cat_tile(t.category, "sm") }}
         <span class="item-body">
           <span class="item-title">{{ t.name }}</span>
           <span class="item-meta"><span>{{ t.category.name }}</span><span>· {{ t.recurrence_text|lower }}</span></span>
