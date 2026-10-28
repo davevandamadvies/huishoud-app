@@ -44,6 +44,8 @@ def test_service_worker(anon_client: TestClient) -> None:
         assert f'addEventListener("{event}"' in body
     # Geen gegevens offline: alleen de offline-pagina en haar bestanden
     assert '"/offline"' in body
+    # De offline-pagina herstelt zichzelf, dus haar script moet offline werken
+    assert '"/static/js/app.js"' in body
 
 
 def test_offline_page_is_public(anon_client: TestClient) -> None:
@@ -51,6 +53,14 @@ def test_offline_page_is_public(anon_client: TestClient) -> None:
     assert r.status_code == 200
     assert "Je bent offline" in r.text
     assert 'aria-label="Hoofdmenu"' not in r.text
+    assert "data-offline-retry" in r.text
+    assert "Tailscale" in r.text
+
+
+def test_healthz_is_public(anon_client: TestClient) -> None:
+    # De offline-pagina gebruikt /healthz om te zien of de app terug is.
+    r = anon_client.get("/healthz", follow_redirects=False)
+    assert r.status_code == 200
 
 
 def test_pages_link_manifest(client: TestClient) -> None:

@@ -3,8 +3,9 @@
 <header>
   <h1 class="page-title">Je bent offline</h1>
 </header>
-<div class="card">
-  <p>Er is nu geen verbinding met de app. Zodra je weer verbinding hebt, kun je verder.</p>
-  <a class="button button-outline" href="/">Opnieuw proberen</a>
+<div class="card" data-offline>
+  <p>Je telefoon kan de app nu niet bereiken. Staat Tailscale aan en is die verbonden? Zodra de app weer bereikbaar is, ga je vanzelf verder.</p>
+  <p class="muted" data-offline-status role="status" aria-live="polite"></p>
+  <a class="button button-outline" href="/" data-offline-retry>Opnieuw proberen</a>
 </div>
 {% endblock %}

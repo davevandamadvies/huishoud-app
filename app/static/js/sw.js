@@ -3,11 +3,12 @@
 // melding, en een offline-pagina tonen. Gegevens worden niet offline bewaard.
 "use strict";
 
-const CACHE = "huishoud-offline-v1";
+const CACHE = "huishoud-offline-v2";
 const OFFLINE_URL = "/offline";
 const PRECACHE = [
   OFFLINE_URL,
   "/static/css/app.css",
+  "/static/js/app.js",
   "/static/icons/icon-192.png",
   "/static/vendor/figtree/figtree-latin-wght-normal.woff2",
 ];
