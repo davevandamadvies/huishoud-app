@@ -210,6 +210,44 @@
     if (input && input.type === "hidden") input.value = next;
   });
 
+  // Offline-pagina: blijf op de achtergrond kijken of de app weer bereikbaar
+  // is en laad dan de pagina opnieuw. De service worker toont deze pagina
+  // alleen als het netwerk faalt, dus elk antwoord van /healthz is genoeg.
+  var offline = document.querySelector("[data-offline]");
+  if (offline) {
+    var status = offline.querySelector("[data-offline-status]");
+    var checking = false;
+
+    var goBack = function () {
+      // De adresbalk toont nog de pagina die je wilde openen; /offline zelf
+      // herladen zou altijd weer deze pagina geven.
+      if (window.location.pathname === "/offline") window.location.replace("/");
+      else window.location.reload();
+    };
+
+    var check = function () {
+      if (checking || document.visibilityState === "hidden") return;
+      checking = true;
+      if (status) status.textContent = "Bezig met verbinden…";
+      fetch("/healthz", { cache: "no-store", redirect: "manual" })
+        .then(goBack, function () {
+          if (status) status.textContent = "Nog geen verbinding. We proberen het zo weer.";
+        })
+        .then(function () {
+          checking = false;
+        });
+    };
+
+    offline.querySelector("[data-offline-retry]").addEventListener("click", function (event) {
+      event.preventDefault();
+      check();
+    });
+    window.addEventListener("online", check);
+    document.addEventListener("visibilitychange", check);
+    window.setInterval(check, 5000);
+    check();
+  }
+
   // Service worker registreren (voor meldingen en de offline-pagina).
   if ("serviceWorker" in navigator && window.isSecureContext) {
     window.addEventListener("load", function () {
