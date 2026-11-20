@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build-stage: afhankelijkheden en project installeren in /app/.venv ----
-FROM python:3.13-slim@sha256:bb2988715db2cf7ace7b53f38f3cffbef7c7046a656bee66245eb0ed386e2e81 AS build
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS build
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.22@sha256:f513a91fc62fe7c17567eee97230dd198e43edb8a9fbecca843714a4358fe1bc /uv /bin/uv
 
@@ -23,7 +23,7 @@ COPY alembic.ini ./
 RUN uv sync --locked --no-dev
 
 # ---- Runtime-stage: alleen venv en code, non-root ----
-FROM python:3.13-slim@sha256:bb2988715db2cf7ace7b53f38f3cffbef7c7046a656bee66245eb0ed386e2e81 AS runtime
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS runtime
 
 # Debian-beveiligingsupdates meenemen die nog niet in de basis-image zitten
 # (bijv. libpcre2-8-0, CVE-2026-103111); pip is runtime niet nodig.
